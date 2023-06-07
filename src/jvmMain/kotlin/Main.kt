@@ -122,7 +122,7 @@ fun App() {
   }
   MaterialTheme {
     Box(
-      modifier = Modifier.fillMaxSize().background(Color(153, 255, 102))
+      modifier = Modifier.fillMaxSize().background(Color(160, 240, 90))
     )
     Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
       game.entities.filterIsInstance<BattleUnit>()
