@@ -23,6 +23,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+        implementation("org.jetbrains.kotlinx:multik-core:0.2.2")
       }
     }
     val jvmMain by getting {

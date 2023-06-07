@@ -12,56 +12,61 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import logic.models.BattleUnit
+import logic.models.Entity
 import java.util.*
 import kotlin.random.Random
 
-data class Game(var points: MutableMap<String, List<Offset>> = mutableStateMapOf())
+data class Game(  val entities: List<Entity> = mutableStateListOf()) {
+  var running: Boolean by mutableStateOf(false)
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun BattleUnit(game: Game) {
-  val eid = UUID.randomUUID().toString()
-  val location = Position((Random.nextFloat() * 1000).dp, (Random.nextFloat() * 1000).dp)
-  val size = DpSize(Dp(if (Random.nextBoolean()) 50f else 100f), Dp(50f))
+fun BattleUnitSprite(bu: BattleUnit, game: Game) {
   Box(
     Modifier
-      .offset(location.x, location.y)
-      .size(size)
+      .offset(bu.position.x.dp, bu.position.y.dp)
+      .size(DpSize(bu.size.width.dp, bu.size.height.dp))
       .clip(RoundedCornerShape(0))
       .background(Color(150, 0, 0))
       .pointerInput(Unit) {
         detectDragGestures(
           onDragStart = { offset ->
-            game.points[eid] = listOf(
+            game.running = false
+            bu.path = mutableStateListOf(
               offset.copy(
-                offset.x + location.x.value,
-                offset.y + location.y.value
+                offset.x + bu.position.x,
+                offset.y + bu.position.y
               )
             )
           },
           onDrag = { change, _ ->
-            game.points[eid] = game.points[eid]!! + change.historical
+            bu.path = bu.path + change.historical
+              .filterIndexed { index, _ -> index % 10 == 0 }
               .map {
                 it.position.copy(
-                  it.position.x + location.x.value,
-                  it.position.y + location.y.value
+                  it.position.x + bu.position.x,
+                  it.position.y + bu.position.y
                 )
               }
               .toTypedArray()
               .plus(change.position.run {
-                copy(x + location.x.value, y + location.y.value)
+                copy(x + bu.position.x, y + bu.position.y)
               })
+          },
+          onDragEnd = {
+            game.running = true
           }
         )
       }
@@ -72,53 +77,78 @@ fun BattleUnit(game: Game) {
         style = Stroke(1f),
         path = Path().apply {
           moveTo(0f, 0f)
-          lineTo(size.width.value, size.height.value)
-          lineTo(size.width.value, 0f)
-          lineTo(0f, size.height.value)
+          lineTo(bu.size.width, bu.size.height)
+          lineTo(bu.size.width, 0f)
+          lineTo(0f, bu.size.height)
         }
       )
     })
   }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
-  val game = remember { Game() }
+  val game = remember {
+    Game(
+      entities = mutableStateListOf(
+        BattleUnit(
+          UUID.randomUUID().toString(),
+          Vector((Random.nextFloat() * 1000), (Random.nextFloat() * 1000)),
+          Size(if (Random.nextBoolean()) 50f else 100f, 50f)
+        ),
+        BattleUnit(
+          UUID.randomUUID().toString(),
+          Vector((Random.nextFloat() * 1000), (Random.nextFloat() * 1000)),
+          Size(if (Random.nextBoolean()) 50f else 100f, 50f)
+        ),
+        BattleUnit(
+          UUID.randomUUID().toString(),
+          Vector((Random.nextFloat() * 1000), (Random.nextFloat() * 1000)),
+          Size(if (Random.nextBoolean()) 50f else 100f, 50f)
+        ),
+      )
+    )
+  }
   LaunchedEffect(Unit) {
+    var lastTime = 0L
     while (true) {
-      withFrameMillis {
-
+      withFrameNanos { time ->
+        val delta = ((time - lastTime) / 1E8).toFloat()
+        game.entities.forEach { it.update(delta, game) }
+        lastTime = time
       }
     }
   }
   MaterialTheme {
+    Box(
+      modifier = Modifier.fillMaxSize().background(Color(153, 255, 102))
+    )
     Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-      game.points.forEach { (eid, points) ->
-        if (points.size > 1) {
-          drawPath(
-            color = Color.Blue,
-            style = Stroke(3f),
-            path = Path().apply {
-              points.first().run { moveTo(x, y) }
-              points.subList(1, points.size)
-                .filterIndexed { index, _ -> index % 2 == 0 }
-                .forEach { lineTo(it.x, it.y) }
-              points.last().let { last ->
-                moveTo(last.x - 10, last.y - 10)
-                lineTo(last.x + 10, last.y + 10)
-                moveTo(last.x + 10, last.y - 10)
-                lineTo(last.x - 10, last.y + 10)
+      game.entities.filterIsInstance<BattleUnit>()
+        .forEach { bu ->
+          if (bu.path.size > 1) {
+            drawPath(
+              color = Color.Blue,
+              style = Stroke(3f),
+              path = Path().apply {
+                bu.path.first().run { moveTo(x, y) }
+                bu.path.subList(1, bu.path.size)
+                  .filterIndexed { index, _ -> index % 2 == 0 }
+                  .forEach { lineTo(it.x, it.y) }
+                bu.path.last().let { last ->
+                  moveTo(last.x - 10, last.y - 10)
+                  lineTo(last.x + 10, last.y + 10)
+                  moveTo(last.x + 10, last.y - 10)
+                  lineTo(last.x - 10, last.y + 10)
+                }
               }
-            }
-          )
+            )
+          }
         }
-      }
     })
-    for (i in 0..3) {
-      BattleUnit(game)
-    }
+    game.entities.filterIsInstance<BattleUnit>()
+      .forEach { BattleUnitSprite(it, game) }
   }
 }
 
