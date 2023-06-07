@@ -7,12 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.onClick
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,9 +18,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import logic.models.BattleUnit
 import logic.models.center
@@ -44,7 +42,6 @@ suspend fun PointerInputScope.recordPath() {
     },
     onDrag = { change, _ ->
       path = path + change.historical
-        .filterIndexed { index, _ -> index % 2 == 0 }
         .map { it.position }
         .map {
           Offset(
@@ -62,20 +59,24 @@ suspend fun PointerInputScope.recordPath() {
   )
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BattleUnit.sprite() {
+  var showDragBox by remember { mutableStateOf(false) }
   Box(
     Modifier
       .offset(this.position.x.dp, this.position.y.dp)
       .size(this.size.dp)
-      .clip(RoundedCornerShape(0))
       .background(this.color)
+      .onPointerEvent(PointerEventType.Enter) { showDragBox = true }
+      .onPointerEvent(PointerEventType.Exit) { showDragBox = false }
   ) {
     val dragBoxSize = Size(10f, 10f)
     Box(
       Modifier
         .align(Alignment.Center)
-        .background(Color.Black)
+        .clip(CircleShape)
+        .background(Color.Black.copy(alpha = if (showDragBox) 0.7f else 0f))
         .size(dragBoxSize.dp)
         .pointerInput(Unit) { recordPath() }
     )
