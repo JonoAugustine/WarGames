@@ -21,7 +21,6 @@ import ui.sprite
 @Composable
 fun GameScreen(game: Game) {
   Box(Modifier.fillMaxSize().background(game.background))
-  PathLayer(game)
   Column {
     Button(
       enabled = game.state != PLANNING,
@@ -41,6 +40,7 @@ fun GameScreen(game: Game) {
   game.entities
     .filterIsInstance<BattleUnit>()
     .forEach { it.sprite() }
+  PathLayer(game)
 }
 
 @Composable

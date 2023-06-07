@@ -7,47 +7,60 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import logic.models.BattleUnit
+import logic.models.center
 import util.dp
 
+/**
+ * TODO Make sure path starts in center
+ *
+ */
 context(BattleUnit)
 @OptIn(ExperimentalComposeUiApi::class)
-suspend fun PointerInputScope.recordPath() = detectDragGestures(
-  onDragStart = { offset ->
-    path = mutableStateListOf(
-      offset.copy(
-        offset.x + position.x,
-        offset.y + position.y
-      )
-    )
-  },
-  onDrag = { change, _ ->
-    path = path + change.historical
-      .filterIndexed { index, _ -> index % 10 == 0 }
-      .map {
-        it.position.copy(
-          it.position.x + position.x,
-          it.position.y + position.y
-        )
-      }
-      .toTypedArray()
-      .plus(change.position.run {
-        copy(x + position.x, y + position.y)
-    })
-  },
-)
+suspend fun PointerInputScope.recordPath() {
+  var initialOffset = Offset(0f, 0f)
+  detectDragGestures(
+    onDragStart = { offset ->
+      initialOffset = offset
+      path = mutableStateListOf(Offset(center.x, center.y))
+    },
+    onDrag = { change, _ ->
+      path = path + change.historical
+        .filterIndexed { index, _ -> index % 2 == 0 }
+        .map { it.position }
+        .map {
+          Offset(
+            it.x + center.x - initialOffset.x,
+            it.y + center.y - initialOffset.y
+          )
+        }
+        .plus(change.position.let {
+          Offset(
+            it.x + center.x - initialOffset.x,
+            it.y + center.y - initialOffset.y
+          )
+        })
+    },
+  )
+}
 
 @Composable
 fun BattleUnit.sprite() {
@@ -57,8 +70,15 @@ fun BattleUnit.sprite() {
       .size(this.size.dp)
       .clip(RoundedCornerShape(0))
       .background(this.color)
-      .pointerInput(Unit) { recordPath() }
   ) {
+    val dragBoxSize = Size(10f, 10f)
+    Box(
+      Modifier
+        .align(Alignment.Center)
+        .background(Color.Black)
+        .size(dragBoxSize.dp)
+        .pointerInput(Unit) { recordPath() }
+    )
     Canvas(Modifier.fillMaxSize()) {
       drawPath(
         color = Color.Black,
