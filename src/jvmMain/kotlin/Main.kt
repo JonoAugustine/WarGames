@@ -27,7 +27,8 @@ import logic.models.Entity
 import java.util.*
 import kotlin.random.Random
 
-data class Game(  val entities: List<Entity> = mutableStateListOf()) {
+data class Game(val entities: List<Entity> = mutableStateListOf()) {
+
   var running: Boolean by mutableStateOf(false)
 }
 
@@ -137,10 +138,19 @@ fun App() {
                   .filterIndexed { index, _ -> index % 2 == 0 }
                   .forEach { lineTo(it.x, it.y) }
                 bu.path.last().let { last ->
+                  //draw X
                   moveTo(last.x - 10, last.y - 10)
                   lineTo(last.x + 10, last.y + 10)
                   moveTo(last.x + 10, last.y - 10)
                   lineTo(last.x - 10, last.y + 10)
+                  // draw outline
+                  val olxRoot = last.x - bu.size.width / 2
+                  val olyRoot = last.y - bu.size.height / 2
+                  moveTo(olxRoot, olyRoot)
+                  lineTo(olxRoot + bu.size.width, olyRoot)
+                  lineTo(olxRoot + bu.size.width, olyRoot + bu.size.height)
+                  lineTo(olxRoot, olyRoot + bu.size.height)
+                  lineTo(olxRoot, olyRoot)
                 }
               }
             )
