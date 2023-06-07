@@ -18,9 +18,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import logic.models.BattleUnit
+import util.dp
 
 context(BattleUnit)
 @OptIn(ExperimentalComposeUiApi::class)
@@ -54,7 +54,7 @@ fun BattleUnit.sprite() {
   Box(
     Modifier
       .offset(this.position.x.dp, this.position.y.dp)
-      .size(DpSize(this.size.width.dp, this.size.height.dp))
+      .size(this.size.dp)
       .clip(RoundedCornerShape(0))
       .background(this.color)
       .pointerInput(Unit) { recordPath() }

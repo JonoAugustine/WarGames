@@ -15,23 +15,25 @@ import util.Vector
 import java.util.*
 import kotlin.random.Random
 
+val windowSize = Size(1920f / 2, 1080f / 2)
+
 fun main() = application {
   val game = remember {
     Game(
       entities = mutableStateListOf(
         BattleUnit(
           UUID.randomUUID().toString(),
-          Vector((Random.nextFloat() * 100), (Random.nextFloat() * 100)),
+          Vector(windowSize.width / 4, windowSize.height / 4),
           Size(if (Random.nextBoolean()) 50f else 100f, 50f)
         ),
         BattleUnit(
           UUID.randomUUID().toString(),
-          Vector((Random.nextFloat() * 100), (Random.nextFloat() * 100)),
+          Vector(windowSize.width / 4, windowSize.height / 2),
           Size(if (Random.nextBoolean()) 50f else 100f, 50f)
         ),
         BattleUnit(
           UUID.randomUUID().toString(),
-          Vector((Random.nextFloat() * 1000), (Random.nextFloat() * 1000)),
+          Vector(windowSize.width / 8, windowSize.height / 8),
           Size(if (Random.nextBoolean()) 50f else 100f, 50f)
         ),
       )
@@ -40,7 +42,7 @@ fun main() = application {
 
   Window(
     title = "War Games",
-    state = WindowState(width = 1920.dp / 2, height = 1080.dp / 2),
+    state = WindowState(width = windowSize.width.dp, height = windowSize.height.dp),
     onCloseRequest = ::exitApplication
   ) {
     LaunchedEffect(Unit) {
