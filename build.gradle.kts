@@ -15,6 +15,17 @@ repositories {
 }
 
 kotlin {
+  targets {
+    all {
+      compilations {
+        all {
+          compilerOptions.configure {
+            freeCompilerArgs.add("-Xcontext-receivers")
+          }
+        }
+      }
+    }
+  }
   jvm {
     jvmToolchain(11)
     withJava()

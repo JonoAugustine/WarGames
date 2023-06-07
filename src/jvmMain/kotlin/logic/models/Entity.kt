@@ -1,18 +1,20 @@
 package logic.models
 
-import Game
-import Vector
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import logic.Game
+import logic.GameState.PLANNING
+import util.Vector
 
 sealed interface Entity {
 
   val id: String
   val position: Vector
-  fun update(delta: Float, gamestate: Game): Unit
+  fun update(delta: Float, game: Game): Unit
 }
 
 /**
@@ -29,12 +31,15 @@ class BattleUnit(
   position: Vector,
   size: Size,
   speed: Float = 2f,
+  color: Color = Color(150, 0, 0),
 ) : Entity {
 
   override var position by mutableStateOf(position)
   var speed by mutableStateOf(speed)
   var size by mutableStateOf(size)
+  var color by mutableStateOf(color)
   private var pathIndex by mutableStateOf(0f)
+  private var _path by mutableStateOf<List<Offset>>(emptyList())
   private val nextPathOffset: Offset?
     get() = if (this.pathIndex < this._path.size) {
       this._path[this.pathIndex.toInt()]
@@ -43,7 +48,6 @@ class BattleUnit(
       this._path = emptyList()
       null
     }
-  private var _path by mutableStateOf<List<Offset>>(emptyList())
   var path
     get() = this._path
     set(value) {
@@ -51,8 +55,9 @@ class BattleUnit(
       this._path = value
     }
 
-  override fun update(delta: Float, gamestate: Game) {
-    if (this._path.isEmpty() || !gamestate.running && this.speed > 0) return
+
+  override fun update(delta: Float, game: Game) {
+    if (this._path.isEmpty() || game.state === PLANNING) return
     this.pathIndex = this.pathIndex + delta * this.speed
     this.nextPathOffset
       ?.let { Vector(it.x - this.size.width / 2, it.y - this.size.height / 2) }

@@ -1,10 +1,7 @@
-import org.jetbrains.kotlinx.multik.api.mk
-import org.jetbrains.kotlinx.multik.api.ndarray
-import org.jetbrains.kotlinx.multik.ndarray.data.D1Array
+package util
 
 data class Vector(var x: Float, var y: Float, var magnitude: Float? = null) {
 
-  private val mkArray: D1Array<Float> get() = mk.ndarray(mk[this.x, this.y])
   operator fun times(scale: Float): Vector {
     return Vector(this.x * scale, this.y * scale)
   }
