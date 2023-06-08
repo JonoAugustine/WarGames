@@ -7,7 +7,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import logic.Game
-import logic.GameState.PLANNING
 import logic.MatchState
 import util.Vector
 

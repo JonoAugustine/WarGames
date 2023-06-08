@@ -19,5 +19,6 @@ Table-top, unit-based war military maneuver game.
 ## TODO
 - unit rotation
 - menu UI
-- unit path smoothing (grid maybe?)
-- collision
+- unit path smoothing (grid snapping maybe?)
+- improve collision response
+- networking
