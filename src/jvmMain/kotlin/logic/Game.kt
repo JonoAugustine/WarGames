@@ -1,9 +1,6 @@
 package logic
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import logic.models.Entity
 
@@ -12,7 +9,24 @@ enum class GameState {
   RUNNING,
 }
 
-data class Game(val entities: List<Entity> = mutableStateListOf()) {
+enum class MatchState {
+  PLACING,
+  PLANNING,
+  RUNNING
+}
+
+class Match {
+
+  var state: MatchState by mutableStateOf(MatchState.PLACING)
+  var entities: List<Entity> by mutableStateOf(emptyList())
+  var background: Color by mutableStateOf(Color(0, 130, 0))
+}
+
+class Game {
   var state: GameState by mutableStateOf(GameState.PLANNING)
-  var background: Color by mutableStateOf(Color(0, 196, 0))
+  var match: Match? by mutableStateOf(null)
+
+  fun update(delta: Float) {
+    match?.entities?.forEach { it.update(delta, this) }
+  }
 }
