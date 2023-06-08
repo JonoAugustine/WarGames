@@ -1,11 +1,15 @@
-import com.jonoaugustine.wargames.common.Entity
-import com.jonoaugustine.wargames.common.User
+package com.jonoaugustine.wargames.common
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Player(val user: User)
 
+@Serializable
 data class Match(
+  val id: String,
   val state: State,
-  val players: MutableMap<String, Player>,
+  val players: Map<String, Player>,
   val entities: List<Entity>,
 ) {
 
@@ -14,6 +18,9 @@ data class Match(
     PLANNING,
     RUNNING
   }
+
+  fun addPlayer(user: User): Match =
+    copy(players = this.players + Pair(user.id, Player(user)))
 
   fun updateState(newState: State): Match = copy(state = newState)
 

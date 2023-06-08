@@ -23,7 +23,6 @@ class Match {
 }
 
 class Game {
-  var state: GameState by mutableStateOf(GameState.PLANNING)
   var match: Match? by mutableStateOf(null)
 
   fun update(delta: Float) {

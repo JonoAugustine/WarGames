@@ -1,7 +1,5 @@
 package com.jonoaugustine.wargames.common
 
-import Match
-
 sealed interface Entity {
 
   val id: String
