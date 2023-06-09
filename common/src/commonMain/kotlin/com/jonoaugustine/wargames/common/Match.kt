@@ -11,6 +11,7 @@ data class Match(
   val state: State,
   val players: Map<String, Player>,
   val entities: List<Entity>,
+  val background: Color = Color(),
 ) {
 
   enum class State {
@@ -18,6 +19,8 @@ data class Match(
     PLANNING,
     RUNNING
   }
+
+  fun setState(state: State): Match = copy(state = state)
 
   fun addPlayer(user: User): Match =
     copy(players = this.players + Pair(user.id, Player(user)))

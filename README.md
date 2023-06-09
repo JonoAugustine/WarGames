@@ -2,8 +2,13 @@
 
 Table-top, unit-based war military maneuver game.
 
-## Game Loop
-1.  
+## UI
+- Main Menu <br/>
+  -> Match Creation
+- Match Creation <br/>
+  -> Main Menu <br/>
+  -> Match Screen
+- Match Screen
 
 ## Project Structure
 - ui

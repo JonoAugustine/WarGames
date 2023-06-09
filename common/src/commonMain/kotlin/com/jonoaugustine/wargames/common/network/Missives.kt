@@ -1,5 +1,6 @@
 package com.jonoaugustine.wargames.common.network
 
+import com.jonoaugustine.wargames.common.Entity
 import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.Player
 import com.jonoaugustine.wargames.common.User
@@ -30,6 +31,14 @@ sealed class UserEvent : Event()
 @Serializable
 @SerialName("connected")
 data class UserConnected(val user: User) : UserEvent()
+
+@Serializable
+@SerialName("update.name")
+data class UpdateUsername(val name: String) : UserAction()
+
+@Serializable
+@SerialName("update.name")
+data class UsernameUpdated(val user: User) : UserEvent()
 /*
  * Match Actions & Events
  */
@@ -67,3 +76,7 @@ object Start : MatchAction()
 @Serializable
 @SerialName("started")
 data class MatchStarted(val match: Match) : MatchEvent()
+
+@Serializable
+@SerialName("placement")
+data class EntityPlacement(val entity: Entity) : MatchAction()

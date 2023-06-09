@@ -2,6 +2,7 @@ package com.jonoaugustine.wargames.server
 
 import com.jonoaugustine.wargames.common.JsonConfig
 import com.jonoaugustine.wargames.common.network.Action
+import com.jonoaugustine.wargames.common.network.ErrorEvent
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
@@ -19,8 +20,6 @@ import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.CloseReason
-import io.ktor.websocket.CloseReason.Codes
-import io.ktor.websocket.CloseReason.Codes.CANNOT_ACCEPT
 import io.ktor.websocket.CloseReason.Codes.INTERNAL_ERROR
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -37,8 +36,8 @@ fun main() {
     CIO,
     port = PORT ?: 8080,
     watchPaths = listOf("classes"),
-    module = Application::configuration
-  )
+    module = Application::configuration,
+  ).start(true)
 }
 
 fun Application.configuration() {
@@ -64,10 +63,8 @@ fun Application.configuration() {
 
 fun Application.WebsocketConfiguration() = routing {
   webSocket {
-    val userID: String = this.call.request.queryParameters["name"]
-      ?.let { connectionFrom(it) }
-      ?.user?.id
-      ?: return@webSocket this.close(CloseReason(CANNOT_ACCEPT, "missing name"))
+    val userID: String = connectionFrom(this.call.request.queryParameters["name"])
+      .user.id
 
     try {
       incoming.consumeEach { frame ->
@@ -76,9 +73,14 @@ fun Application.WebsocketConfiguration() = routing {
         when (frame) {
           is Frame.Text  -> frame.readText()
             .runCatching { JsonConfig.decodeFromString<Action>(this) }
-            .getOrNull()
-            ?.let { TODO("handle incoming action") }
-            ?: TODO("send error event back to client")
+            .getOrElse {
+              it.printStackTrace()
+              send(ErrorEvent("internal error"))
+              null
+            }
+            ?.also { println("received action $it") }
+            ?.let { connection.handleAction(it) }
+            ?.let { send(it) }
 
           is Frame.Close -> TODO("handle closing frame")
           else           -> println("unregistered frame")

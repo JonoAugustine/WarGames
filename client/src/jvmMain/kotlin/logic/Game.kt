@@ -15,7 +15,7 @@ enum class MatchState {
   RUNNING
 }
 
-class Match {
+class ClientMatch {
 
   var state: MatchState by mutableStateOf(MatchState.PLACING)
   var entities: List<Entity> by mutableStateOf(emptyList())
@@ -23,9 +23,9 @@ class Match {
 }
 
 class Game {
-  var match: Match? by mutableStateOf(null)
+  var clientMatch: ClientMatch? by mutableStateOf(null)
 
   fun update(delta: Float) {
-    match?.entities?.forEach { it.update(delta, this) }
+    clientMatch?.entities?.forEach { it.update(delta, this) }
   }
 }

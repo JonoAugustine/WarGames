@@ -22,10 +22,15 @@ dependencies {
   implementation("io.ktor:ktor-server-cors-jvm:2.3.1")
   implementation("io.ktor:ktor-server-core-jvm:2.3.1")
   implementation("io.ktor:ktor-server-websockets-jvm:2.3.1")
+
+  testImplementation("io.ktor:ktor-server-test-host-jvm:2.3.1")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.21")
 }
 
 application {
+  // dynamically set main class name
   mainClass.set("${group}.${rootProject.name}.$name.ServerKt")
+  // set development mode
   if (project.ext["production"] as Boolean? != true) {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
   }

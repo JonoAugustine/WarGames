@@ -30,11 +30,8 @@ import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import logic.Match
-import logic.MatchState
-import logic.models.BattleUnit
-import logic.models.center
-import util.Vector
+import com.jonoaugustine.wargames.common.*
+import util.composeColor
 import util.dp
 
 context(Match)
@@ -47,12 +44,12 @@ fun BattleUnit.sprite() {
     Modifier.offset(this.position.x.dp, this.position.y.dp)
       .size(this.size.dp)
       .rotate(rotation)
-      .background(this.color)
+      .background(this.color.composeColor)
       .focusRequester(requester)
       .focusable()
       .onKeyEvent {
         if (mouseOver && it.key == Key.R) {
-          rotation += 12f
+          TODO("send unit update event")
           true
         } else false
       }
@@ -61,7 +58,7 @@ fun BattleUnit.sprite() {
       .pointerInput(Unit) { moveUnit() }
   ) {
     val dragBoxSize = Size(10f, 10f)
-    if (state == MatchState.PLANNING) {
+    if (state == Match.State.PLANNING) {
       Box(
         Modifier.align(Alignment.Center)
           .clip(CircleShape)
@@ -73,48 +70,56 @@ fun BattleUnit.sprite() {
     Canvas(Modifier.fillMaxSize()) {
       drawPath(color = Color.Black, style = Stroke(1f), path = Path().apply {
         moveTo(0f, 0f)
-        lineTo(this@sprite.size.width, this@sprite.size.height)
-        lineTo(this@sprite.size.width, 0f)
-        lineTo(0f, this@sprite.size.height)
+        lineTo(this@sprite.size.width.toFloat(), this@sprite.size.height.toFloat())
+        lineTo(this@sprite.size.width.toFloat(), 0f)
+        lineTo(0f, this@sprite.size.height.toFloat())
       })
     }
   }
 }
 
-context(BattleUnit)
+context(Entity)
 @OptIn(ExperimentalComposeUiApi::class)
 suspend fun PointerInputScope.recordPath() {
+  var path by mutableStateOf(listOf<Vector>())
   var initialOffset = Offset(0f, 0f)
   detectDragGestures(
     onDragStart = { offset ->
       initialOffset = offset
-      path = mutableStateListOf(Offset(center.x, center.y))
+      path = mutableStateListOf(Vector(center.x, center.y))
     },
     onDrag = { change, _ ->
       path = path + change.historical.map { it.position }.map {
-        Offset(
+        Vector(
           it.x + center.x - initialOffset.x,
           it.y + center.y - initialOffset.y
         )
       }.plus(change.position.let {
-        Offset(
+        Vector(
           it.x + center.x - initialOffset.x,
           it.y + center.y - initialOffset.y
         )
       })
     },
+    onDragEnd = {
+      TODO("send path update")
+    }
   )
 }
 
 context(BattleUnit, Match)
 suspend fun PointerInputScope.moveUnit() {
+  // TODO draw preview of drag
   detectDragGestures(
     onDrag = { change, _ ->
-      if (state == MatchState.PLACING) {
-        position = change.position.let {
-          Vector(it.x + position.x - size.width / 2, it.y + position.y - size.height / 2)
-        }
-      }
+      //      if (state == MatchState.PLACING) {
+      //        position = change.position.let {
+      //          Vector(it.x + position.x - size.width / 2, it.y + position.y - size.height / 2)
+      //        }
+      //      }
     },
+    onDragEnd = {
+      TODO("send position update")
+    }
   )
 }

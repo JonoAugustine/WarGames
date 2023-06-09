@@ -99,12 +99,12 @@ class BattleUnit(
     }
 
   override fun update(delta: Float, game: Game) {
-    if (this._path.isEmpty() || game.match!!.state === MatchState.PLANNING) return
+    if (this._path.isEmpty() || game.clientMatch!!.state === MatchState.PLANNING) return
     this.pathIndex += delta * this.speed
     // move along path
     this.nextPathOffset?.let { this.position = it }
     // check collisions
-    game.match!!.entities.filterIsInstance<BattleUnit>()
+    game.clientMatch!!.entities.filterIsInstance<BattleUnit>()
       .filterNot { it === this }
       .filter { this.collidesWith(it) }
       .takeIf { it.isNotEmpty() }

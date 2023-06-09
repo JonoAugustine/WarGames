@@ -1,6 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val production = System.getenv("ENV")?.contains("PROD", true) ?: false
+val production = System.getenv("ENV")
+  ?.contains("PROD", true)
+  ?: false
 
 plugins {
   kotlin("multiplatform") apply false
