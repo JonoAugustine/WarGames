@@ -1,25 +1,29 @@
 package com.jonoaugustine.wargames.server
 
 import com.jonoaugustine.wargames.common.JsonConfig
-import com.jonoaugustine.wargames.common.network.Action
-import com.jonoaugustine.wargames.common.network.ErrorEvent
+import com.jonoaugustine.wargames.common.network.missives.Action
+import com.jonoaugustine.wargames.common.network.missives.ErrorEvent
+import com.jonoaugustine.wargames.common.network.missives.UserConnected
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.auth.*
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.header
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.CloseReason
+import io.ktor.websocket.CloseReason.Codes.CANNOT_ACCEPT
 import io.ktor.websocket.CloseReason.Codes.INTERNAL_ERROR
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -51,6 +55,15 @@ fun Application.configuration() {
     allowHeader(HttpHeaders.Authorization)
     anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
   }
+  authentication {
+    basic("basic") {
+      realm = "websocket"
+      validate { (name, pass) ->
+        if (name == pass) UserIdPrincipal(name)
+        else null
+      }
+    }
+  }
   install(WebSockets) {
     contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
     pingPeriod = Duration.ofSeconds(15)
@@ -62,36 +75,52 @@ fun Application.configuration() {
 }
 
 fun Application.WebsocketConfiguration() = routing {
-  webSocket {
-    val userID: String = connectionFrom(this.call.request.queryParameters["name"])
-      .user.id
+  authenticate("basic") {
+    webSocket {
+      val idPrincipal = call.principal<UserIdPrincipal>()
+      val headerName = call.request.header("wg.name")
+        ?: return@webSocket close(CloseReason(CANNOT_ACCEPT, "missing header wg.name"))
+      val headerUid = call.request.header("wg.id")
+        ?: return@webSocket close(CloseReason(CANNOT_ACCEPT, "missing header wg.id"))
 
-    try {
-      incoming.consumeEach { frame ->
-        val connection = getConnection(userID)
-          ?: return@webSocket close(CloseReason(INTERNAL_ERROR, "missing connection"))
-        when (frame) {
-          is Frame.Text  -> frame.readText()
-            .runCatching { JsonConfig.decodeFromString<Action>(this) }
-            .getOrElse {
-              it.printStackTrace()
-              send(ErrorEvent("internal error"))
-              null
-            }
-            ?.also { println("received action $it") }
-            ?.let { connection.handleAction(it) }
-            ?.let { send(it) }
+      val con = fillConnection(headerUid, headerName)
+      send(UserConnected(con.user))
 
-          is Frame.Close -> TODO("handle closing frame")
-          else           -> println("unregistered frame")
+      try {
+        incoming.consumeEach { frame ->
+          val connection = getConnection(con.user.id)
+            ?: return@webSocket close(CloseReason(INTERNAL_ERROR, "missing connection"))
+          when (frame) {
+            is Frame.Text -> frame.readText()
+              .runCatching { JsonConfig.decodeFromString<Action>(this) }
+              .getOrElse {
+                it.printStackTrace()
+                send(ErrorEvent("internal error"))
+                null
+              }
+              ?.also { println("received action $it") }
+              ?.let { connection.handleAction(it) }
+              ?.let { send(it) }
+
+            is Frame.Close -> TODO("handle closing frame")
+            else -> println("unregistered frame")
+          }
         }
+      } catch (e: ClosedReceiveChannelException) {
+        println("session closed gracefully")
+      } catch (e: Throwable) {
+        println("session closed with error")
+      } finally {
+        onClose(headerUid)
+        println(
+          buildString {
+            appendLine("connection closed: $headerUid")
+            closeReason.await()
+              ?.also { appendLine("close reason: ${it.knownReason}") }
+              ?.also { appendLine("close message: ${it.message}") }
+          }
+        )
       }
-    } catch (e: ClosedReceiveChannelException) {
-      println("session closed")
-      TODO("remove connection instance")
-    } catch (e: Throwable) {
-      TODO("remove connection instance")
-      TODO("handle error")
     }
   }
 }

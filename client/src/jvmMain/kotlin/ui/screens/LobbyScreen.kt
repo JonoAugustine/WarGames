@@ -13,16 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.jonoaugustine.wargames.common.network.CreateMatch
+import com.jonoaugustine.wargames.common.network.missives.CreateMatch
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.MAIN_MENU
 import state.send
+import ui.Menu
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable
-fun MatchCreator() {
+fun LobbyScreen() = Menu {
   val scope = rememberCoroutineScope()
   Button(
     modifier = Modifier.offset(10.dp, 10.dp),
@@ -40,8 +41,8 @@ fun MatchCreator() {
   ) {
     Button(
       colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green),
-      onClick = { scope.launch { send(CreateMatch) } },
-      content = { Text("Create Match") }
+      onClick = { scope.launch { send(CreateMatch(state.lobby!!.id)) } },
+      content = { Text("Start Match") }
     )
   }
 }

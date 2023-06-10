@@ -31,10 +31,13 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.Match.State.PLACING
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import state.AppState
 import util.composeColor
 import util.dp
 
-context(Match)
+context(AppState, DefaultClientWebSocketSession)
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BattleUnit.sprite() {
@@ -58,7 +61,7 @@ fun BattleUnit.sprite() {
       .pointerInput(Unit) { moveUnit() }
   ) {
     val dragBoxSize = Size(10f, 10f)
-    if (state == Match.State.PLANNING) {
+    if (state.match!!.state == Match.State.PLANNING) {
       Box(
         Modifier.align(Alignment.Center)
           .clip(CircleShape)
@@ -107,16 +110,18 @@ suspend fun PointerInputScope.recordPath() {
   )
 }
 
-context(BattleUnit, Match)
-suspend fun PointerInputScope.moveUnit() {
-  // TODO draw preview of drag
+context(AppState, DefaultClientWebSocketSession, PointerInputScope)
+private suspend fun BattleUnit.moveUnit() {
+  val originalPos = this.position.copy()
+  var dragPos by mutableStateOf(this.position)
   detectDragGestures(
     onDrag = { change, _ ->
-      //      if (state == MatchState.PLACING) {
-      //        position = change.position.let {
-      //          Vector(it.x + position.x - size.width / 2, it.y + position.y - size.height / 2)
-      //        }
-      //      }
+      if (state.match!!.state == PLACING) {
+        dragPos = Vector(
+          change.position.x + this.position.x - this.size.width / 2,
+          change.position.y + this.position.y - this.size.height / 2
+        )
+      }
     },
     onDragEnd = {
       TODO("send position update")

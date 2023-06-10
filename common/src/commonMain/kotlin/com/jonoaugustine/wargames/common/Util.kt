@@ -11,3 +11,6 @@ data class Color(
 )
 
 val Color.Companion.DarkGray get() = Color(51u, 51u, 51u)
+val Color.Companion.Grass get() = Color(72u, 111u, 56u)
+val Color.Companion.Blue get() = Color(25u, 0u, 221u)
+val Color.Companion.Red get() = Color(221u, 0u, 25u)

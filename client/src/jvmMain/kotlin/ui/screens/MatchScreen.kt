@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,28 +15,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.BattleUnit
-import com.jonoaugustine.wargames.common.Match
+import com.jonoaugustine.wargames.common.Match.State.PLACING
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import state.AppState
+import state.Page.MAIN_MENU
 import ui.sprite
 import util.composeColor
 import kotlin.random.Random
 
-context(DefaultClientWebSocketSession)
+context(AppState, DefaultClientWebSocketSession)
 @Composable
-fun MatchScreen(match: Match) {
-  Box(Modifier.fillMaxSize().background(match.background.composeColor))
-  //if (match.state == Match.State.PLACING) PlacementLayer()
-  Column { Text(match.state.name) }
-  with(match) {
-    match.entities
-      .filterIsInstance<BattleUnit>()
-      .forEach { it.sprite() }
-    PathLayer()
+fun MatchScreen() {
+  if (state.match == null) return goTo(MAIN_MENU)
+  Box(Modifier.fillMaxSize().background(state.match!!.background.composeColor))
+  if (state.match!!.state == PLACING) PlacementLayer()
+  Box {
+    Text(
+      state.match!!.state.name,
+      color = Color.White,
+      modifier = Modifier.padding(10.dp)
+    )
   }
+  state.match!!.entities
+    .filterIsInstance<BattleUnit>()
+    .forEach { it.sprite() }
+  PathLayer()
 }
 
-context(Match)
+context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun PlacementLayer() {
   Box(
@@ -55,11 +64,11 @@ fun PlacementLayer() {
   )
 }
 
-context(Match)
+context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun PathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-    entities.filterIsInstance<BattleUnit>()
+    state.match!!.entities.filterIsInstance<BattleUnit>()
       .forEach { bu ->
         if (bu.path.size <= 1) return@forEach
         drawPath(
