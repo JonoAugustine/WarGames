@@ -1,4 +1,4 @@
-package com.jonoaugustine.wargames.server
+package com.jonoaugustine.wargames.server.managers
 
 import com.jonoaugustine.wargames.common.*
 import com.jonoaugustine.wargames.common.network.missives.*

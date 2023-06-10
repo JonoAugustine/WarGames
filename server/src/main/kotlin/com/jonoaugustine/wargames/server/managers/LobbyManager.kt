@@ -1,8 +1,6 @@
-package com.jonoaugustine.wargames.server
+package com.jonoaugustine.wargames.server.managers
 
-import com.jonoaugustine.wargames.common.Entity
 import com.jonoaugustine.wargames.common.Lobby
-import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.Player
 import java.util.Collections.synchronizedMap
 
