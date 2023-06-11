@@ -1,50 +1,40 @@
 package state
 
 import Eventbus
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.Action
-import com.jonoaugustine.wargames.common.network.missives.CreateMatch
 import com.jonoaugustine.wargames.common.network.missives.Event
-import com.jonoaugustine.wargames.common.network.missives.UpdateLobbyName
-import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.basicAuth
 import io.ktor.client.request.header
 import io.ktor.http.HttpMethod
-import io.ktor.http.headersOf
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.websocket.Frame
 import io.ktor.websocket.Frame.Close
 import io.ktor.websocket.Frame.Text
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import state.AttemptState.ATTEMPTING
 import state.AttemptState.DONE
 import state.AttemptState.FAILED
 import state.AttemptState.WAITING
+import state.Page.MAIN_MENU
 import ui.screens.LoadingScreen
 import kotlin.io.path.Path
 import kotlin.io.path.readText
 import kotlin.random.Random
-import kotlin.random.Random.Default
 import kotlin.time.Duration.Companion.seconds
 
 // TODO move credentials class to a file manager or something
@@ -102,6 +92,7 @@ fun SocketContext(content: @Composable DefaultClientWebSocketSession.() -> Unit)
     }
     attemptState = DONE
     socket = connectionResult.getOrThrow()
+    goTo(MAIN_MENU) // TODO handle reconnecting to matches/lobbies
     val handlerResult = socket!!.runCatching {
       incoming.consumeEach { frame ->
         when (frame) {
@@ -143,7 +134,7 @@ fun SocketContext(content: @Composable DefaultClientWebSocketSession.() -> Unit)
   }
 }
 
-private fun Frame.Text.readEvent(): Event? =
+private fun Text.readEvent(): Event? =
   readText().runCatching { JsonConfig.decodeFromString<Event>(this) }
     .also { it.exceptionOrNull()?.printStackTrace() }
     .getOrNull()

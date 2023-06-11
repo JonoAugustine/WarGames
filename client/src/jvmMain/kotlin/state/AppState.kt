@@ -10,8 +10,8 @@ import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.User
 import com.jonoaugustine.wargames.common.network.missives.*
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
@@ -68,7 +68,7 @@ object AppState {
   }
 
   private suspend fun update(block: (AppStateData) -> AppStateData) {
-    println("STATE: updating data ${block(state)}")
+    println("STATE: updating data")
     this.mutex.withLock { state = block(state) }
   }
 

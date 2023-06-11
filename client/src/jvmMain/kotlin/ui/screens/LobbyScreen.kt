@@ -42,7 +42,7 @@ fun LobbyScreen() = Menu {
     SettingsColumn()
     PlayerList()
   }
-  Column(
+  if (state.user.id == state.lobby!!.hostID) Column(
     Modifier.fillMaxSize(0.98F),
     verticalArrangement = Arrangement.Bottom,
     horizontalAlignment = Alignment.End
@@ -103,12 +103,10 @@ fun PlayerList() {
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     state.lobby!!.players.values.forEach {
-      Box(Modifier.background(Color.White).padding(10.dp)) {
-        Text(
-          it.user.name,
-          modifier = Modifier.padding(2.dp, 1.dp)
-        )
+      Box(Modifier.background(Color.White).padding(7.dp)) {
+        Text(          it.user.name,        )
       }
+      Spacer(Modifier.height(10.dp))
     }
   }
 }

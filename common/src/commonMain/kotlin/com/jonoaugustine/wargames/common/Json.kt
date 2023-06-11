@@ -21,8 +21,7 @@ val JsonConfig = Json {
       subclass(CloseLobby::class)
       // MATCH
       subclass(CreateMatch::class)
-      subclass(JoinMatch::class)
-      subclass(Start::class)
+      subclass(StartMatch::class)
       subclass(PlaceEntity::class)
     }
     polymorphic(Event::class) {
@@ -36,10 +35,13 @@ val JsonConfig = Json {
       subclass(LobbyUpdated::class)
       // Match
       subclass(MatchCreated::class)
-      subclass(MatchJoined::class)
       subclass(MatchLeft::class)
-      subclass(MatchStarted::class)
-      subclass(EntityPlaced::class)
+      subclass(MatchUpdated::class)
+      //subclass(MatchStarted::class)
+      //subclass(EntityPlaced::class)
+    }
+    polymorphic(Entity::class) {
+      subclass(Infantry::class)
     }
   }
 }

@@ -13,7 +13,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.auth.*
+import io.ktor.server.auth.UserIdPrincipal
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.basic
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.callloging.CallLogging
@@ -115,8 +118,9 @@ fun Routing.WebsocketConfiguration() = authenticate("basic") {
             }
             ?.also { println("RECEIVED: $it") }
             ?.let { connection.handleAction(it) }
-            ?.let { send(it) }
-            ?.also { println("SEND: $it") }
+            ?.also { println("SEND: ${it.first::class.simpleName}") }
+            ?.let { (e, targets) -> e to targets.mapNotNull { getConnection(it) } }
+            ?.let { (event, targets) -> targets.forEach { it.session.send(event) } }
 
           is Frame.Close -> onClose(connection.id)
           else -> println("unregistered frame")

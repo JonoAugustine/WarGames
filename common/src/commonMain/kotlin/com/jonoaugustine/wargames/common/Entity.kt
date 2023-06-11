@@ -1,12 +1,15 @@
 package com.jonoaugustine.wargames.common
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
 typealias EntityID = String
 
 sealed interface Entity {
 
   val id: EntityID
   val position: Vector
-  val size: Size
+  val size: WgSize
   val rotation: Float
   val collisionBox: Rectangle
   fun update(delta: Float, match: Match): Entity
@@ -30,7 +33,7 @@ sealed interface BattleUnit : Entity {
   override val collisionBox: Rectangle
     get() = Rectangle(
       Vector(position.x - collisionMargin, position.y - collisionMargin),
-      Size(size.width + collisionMargin, size.height + collisionMargin)
+      WgSize(size.width + collisionMargin, size.height + collisionMargin)
     )
 }
 
@@ -39,12 +42,14 @@ sealed interface BattleUnit : Entity {
  *
  * @property step current index of the path
  */
+@Serializable
+@SerialName("entity.infantry")
 data class Infantry(
   override val id: String,
   override val position: Vector,
-  override val size: Size,
-  override val rotation: Float,
+  override val size: WgSize,
   override val speed: Float,
+  override val rotation: Float = 0f,
   override val path: List<Vector> = emptyList(),
   override val color: WgColor = WgColor(200u),
   private val step: Float = 0f,

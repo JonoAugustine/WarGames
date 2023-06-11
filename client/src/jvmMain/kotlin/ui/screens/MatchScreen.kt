@@ -4,23 +4,30 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.BattleUnit
+import com.jonoaugustine.wargames.common.Infantry
 import com.jonoaugustine.wargames.common.Match.State.PLACING
+import com.jonoaugustine.wargames.common.Vector
+import com.jonoaugustine.wargames.common.WgSize
+import com.jonoaugustine.wargames.common.network.missives.PlaceEntity
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.MAIN_MENU
+import state.send
 import ui.sprite
 import util.composeColor
 import kotlin.random.Random
@@ -45,20 +52,23 @@ fun MatchScreen() {
 }
 
 context(AppState, DefaultClientWebSocketSession)
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun PlacementLayer() {
   Box(
     Modifier
       .fillMaxSize()
       .pointerInput(Unit) {
-        detectTapGestures {
-          val size = Size(if (Random.nextBoolean()) 50f else 100f, 50f)
-          TODO("send PLACEMENT action")
-          //entities = entities + Infantry(
-          //  id = UUID.randomUUID().toString(),
-          //  position = Vector(it.x - size.width / 2, it.y - size.height / 2),
-          //  size = size
-          //)
+        detectTapGestures { offset ->
+          val size = WgSize(if (Random.nextBoolean()) 25 else 50, 25)
+          Infantry(
+            id = "",
+            position = Vector(offset.x - size.width / 2, offset.y - size.height / 2),
+            size = size,
+            speed = 2f,
+          )
+            .let { PlaceEntity(state.match!!.id, it) }
+            .let { GlobalScope.launch(Dispatchers.IO) { send(it) } }
         }
       }
   )
@@ -99,3 +109,4 @@ fun PathLayer() {
       }
   })
 }
+

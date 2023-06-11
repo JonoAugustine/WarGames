@@ -1,5 +1,8 @@
 package com.jonoaugustine.wargames.common
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Vector(val x: Float, val y: Float) {
 
   operator fun times(scale: Float): Vector {
@@ -15,9 +18,11 @@ data class Vector(val x: Float, val y: Float) {
   }
 }
 
-data class Size(val width: Int, val height: Int)
+@Serializable
+data class WgSize(val width: Int, val height: Int)
 
-data class Rectangle(val origin: Vector, val size: Size)
+@Serializable
+data class Rectangle(val origin: Vector, val size: WgSize)
 
 val Rectangle.minPos
   get() = Vector(this.origin.x, this.origin.y + this.size.height)

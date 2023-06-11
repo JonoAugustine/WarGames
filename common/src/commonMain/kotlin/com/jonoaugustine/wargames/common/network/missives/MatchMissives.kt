@@ -1,8 +1,9 @@
 package com.jonoaugustine.wargames.common.network.missives
 
 import com.jonoaugustine.wargames.common.Entity
+import com.jonoaugustine.wargames.common.EntityID
 import com.jonoaugustine.wargames.common.Match
-import com.jonoaugustine.wargames.common.Player
+import com.jonoaugustine.wargames.common.Vector
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,43 +15,50 @@ import kotlinx.serialization.Serializable
 sealed interface MatchAction : Action
 
 @Serializable
+sealed interface LiveMatchAction : MatchAction
+
+@Serializable
 sealed interface MatchEvent : Event {
 
   val match: Match
 }
 
 @Serializable
-@SerialName("create")
+@SerialName("match.update")
+data class MatchUpdated(override val match: Match) : MatchEvent
+
+@Serializable
+@SerialName("match.create")
 data class CreateMatch(val lobbyID: String) : MatchAction
 
 @Serializable
-@SerialName("created")
+@SerialName("match.created")
 data class MatchCreated(override val match: Match) : MatchEvent
 
 @Serializable
-@SerialName("join")
-data class JoinMatch(val matchID: String) : MatchAction
+@SerialName("match.join")
+data class JoinMatch(val matchID: String) : LiveMatchAction
 
 @Serializable
-@SerialName("joined")
-data class MatchJoined(val player: Player, override val match: Match) : MatchEvent
-
-@Serializable
-@SerialName("left")
+@SerialName("match.left")
 data class MatchLeft(val playerID: String, override val match: Match) : MatchEvent
 
 @Serializable
-@SerialName("start")
-data class Start(val matchID: String) : MatchAction
+@SerialName("match.start")
+object StartMatch : LiveMatchAction
 
+//@Serializable
+//@SerialName("match.started")
+//data class MatchStarted(override val match: Match) : MatchEvent
 @Serializable
-@SerialName("started")
-data class MatchStarted(override val match: Match) : MatchEvent
+@SerialName("match.place")
+data class PlaceEntity(val matchID: String, val entity: Entity) : LiveMatchAction
 
+//@Serializable
+//@SerialName("match.placed")
+//data class EntityPlaced(val entity: Entity, override val match: Match) : MatchEvent
 @Serializable
-@SerialName("placement")
-data class PlaceEntity(val matchID: String, val entity: Entity) : MatchAction
+@SerialName("match.move")
+data class MoveEntity(val entityID: EntityID, val position: Vector) : LiveMatchAction
 
-@Serializable
-@SerialName("placed")
-data class EntityPlaced(override val match: Match) : MatchEvent
+

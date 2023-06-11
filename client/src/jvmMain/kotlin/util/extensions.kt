@@ -3,10 +3,10 @@ package util
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.WgColor
-import com.jonoaugustine.wargames.common.Size
+import com.jonoaugustine.wargames.common.WgSize
 
-val Size.dp get() = DpSize(width.dp, height.dp)
-val Size.composeSize
+val WgSize.dp get() = DpSize(width.dp, height.dp)
+val WgSize.composeSize
   get() = androidx.compose.ui.geometry.Size(
     width.toFloat(),
     height.toFloat()

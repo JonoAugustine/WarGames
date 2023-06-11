@@ -1,6 +1,7 @@
 package com.jonoaugustine.wargames.server.managers
 
 import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.network.missives.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
@@ -44,3 +45,28 @@ fun Lobby.addPlayer(player: Player): Lobby? =
 
 fun Lobby.removePlayer(playerID: String): Lobby = copy(players = players - playerID)
 
+suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
+  when (action) {
+    CreateLobby        -> getLobbyOf(user)
+      ?.let { LobbyJoined(it.players[id]!!, it) to setOf(id) }
+      ?: newLobby(Player(user, WgColor.Red))
+        .also { it.save() }
+        .let { LobbyCreated(it) to setOf(id) }
+
+    is JoinLobby       -> getLobby(action.lobbyID)
+      ?.takeUnless { it.players.containsKey(id) }
+      ?.let { it to Player(user, WgColor.Blue) }
+      ?.let { (lobby, player) -> lobby.addPlayer(player)?.to(player) }
+      ?.also { (lobby, player) -> lobby.save() to player }
+      ?.let { (lobby, player) -> LobbyJoined(player, lobby) to lobby.players.keys }
+      ?: (ErrorEvent("missing access") to setOf(id))
+
+    is UpdateLobbyName -> getLobbyOf(user)
+      ?.takeIf { it.hostID == user.id }
+      ?.copy(name = action.name)
+      ?.also { it.save() }
+      ?.let { LobbyUpdated(it) to it.players.keys }
+      ?: (ErrorEvent("missing access") to setOf(id))
+
+    is CloseLobby      -> TODO()
+  }
