@@ -32,8 +32,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.*
 import com.jonoaugustine.wargames.common.Match.State.PLACING
+import com.jonoaugustine.wargames.common.network.missives.MoveEntity
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import state.AppState
+import state.send
 import util.composeColor
 import util.dp
 
@@ -110,7 +116,9 @@ suspend fun PointerInputScope.recordPath() {
   )
 }
 
+// TODO add client-side drag preview
 context(AppState, DefaultClientWebSocketSession, PointerInputScope)
+@OptIn(DelicateCoroutinesApi::class)
 private suspend fun BattleUnit.moveUnit() {
   val originalPos = this.position.copy()
   var dragPos by mutableStateOf(this.position)
@@ -123,8 +131,6 @@ private suspend fun BattleUnit.moveUnit() {
         )
       }
     },
-    onDragEnd = {
-      TODO("send position update")
-    }
+    onDragEnd = { GlobalScope.launch(Dispatchers.IO) { send(MoveEntity(id, dragPos)) } }
   )
 }

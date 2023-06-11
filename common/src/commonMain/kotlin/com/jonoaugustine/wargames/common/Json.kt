@@ -37,6 +37,7 @@ val JsonConfig = Json {
       subclass(MatchCreated::class)
       subclass(MatchLeft::class)
       subclass(MatchUpdated::class)
+      subclass(MatchUpdated::class)
       //subclass(MatchStarted::class)
       //subclass(EntityPlaced::class)
     }

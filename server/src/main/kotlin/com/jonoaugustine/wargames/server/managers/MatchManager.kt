@@ -1,6 +1,7 @@
 package com.jonoaugustine.wargames.server.managers
 
 import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.Match.State.PLACING
 import com.jonoaugustine.wargames.common.network.missives.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -32,13 +33,14 @@ fun newMatch(lobby: Lobby): Match = Match(
  */
 fun Match.addEntity(entity: Entity): Match? =
   entity
-    .takeIf { this.entities.none { o -> it.collidesWith(o) } }
+    .takeIf { this.entities.values.none { o -> it.collidesWith(o) } }
     ?.let {
       when (it) {
         is Infantry -> it.copy(id = UUID.randomUUID().toString())
+        is Archer   -> it.copy(id = UUID.randomUUID().toString())
       }
     }
-    ?.let { this.copy(entities = this.entities + it) }
+    ?.let { this.copy(entities = this.entities + (it.id to it)) }
 
 suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse? =
   when (action) {
@@ -46,11 +48,11 @@ suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse? =
       ?.let { newMatch(it) }
       ?.also { it.save() }
       ?.let { MatchCreated(it) to it.players.keys }
-      ?: (ErrorEvent("lobby does not exist") to setOf(id))
+      ?: errorEventOf("lobby does not exist")
 
     is LiveMatchAction -> getMatchOf(user)
       ?.let { handleLiveMatchAction(action, it) }
-      ?: (ErrorEvent("match does not exist") to setOf(id))
+      ?: errorEventOf("match does not exist")
   }
 
 suspend fun Connection.handleLiveMatchAction(
@@ -59,11 +61,42 @@ suspend fun Connection.handleLiveMatchAction(
 ): ActionResponse? =
   when (action) {
     StartMatch     -> TODO()
-    is PlaceEntity -> match.addEntity(action.entity)
+    is PlaceEntity -> action.entity
+      .takeIf { (it as BattleUnit).color == match.players[id]!!.color }
+      .also { it ?: return errorEventOf("mismatch color") }
+      ?.let { match.addEntity(it) }
       ?.also { it.save() }
       ?.let { MatchUpdated(it) to match.players.keys }
-      ?: (ErrorEvent("entity would collide") to setOf(id))
+      ?: errorEventOf("entity would collide")
+
+    is MoveEntity  -> match
+      .takeIf { it.state == PLACING }
+      .also { if (it == null) return errorEventOf("invalid match state") }
+      ?.entities
+      ?.get(action.entityID)
+      .also { if (it == null) return errorEventOf("entity does not exist") }
+      ?.let {
+        when (it) {
+          is Infantry -> it.copy(
+            position = action.position,
+            rotation = action.rotation ?: it.rotation
+          )
+
+          is Archer   -> it.copy(
+            position = action.position,
+            rotation = action.rotation ?: it.rotation
+          )
+        }
+      }
+      ?.takeIf {
+        match.entities.values
+          .filterNot { o -> it.id == o.id }
+          .none { o -> it.collidesWith(o) }
+      }
+      .let { it ?: return errorEventOf("entity would collide") }
+      .let { match.copy(entities = match.entities + (it.id to it)) }
+      .also { it.save() }
+      .let { MatchUpdated(it) to match.players.keys }
 
     is JoinMatch   -> TODO()
-    is MoveEntity  -> TODO()
   }

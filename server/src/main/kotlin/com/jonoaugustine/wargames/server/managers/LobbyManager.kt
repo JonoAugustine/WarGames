@@ -37,11 +37,10 @@ fun newLobby(host: Player): Lobby =
   )
 
 /**
- * Returns an updated [Lobby] state if the [player] was added
+ * Returns an updated [Lobby] state where the [player] was added
  */
-fun Lobby.addPlayer(player: Player): Lobby? =
-  takeUnless { players.containsKey(player.user.id) }
-    ?.copy(players = players + (player.user.id to player))
+fun Lobby.addPlayer(player: Player): Lobby =
+  copy(players = players + (player.user.id to player))
 
 fun Lobby.removePlayer(playerID: String): Lobby = copy(players = players - playerID)
 
@@ -53,13 +52,16 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
         .also { it.save() }
         .let { LobbyCreated(it) to setOf(id) }
 
-    is JoinLobby       -> getLobby(action.lobbyID)
-      ?.takeUnless { it.players.containsKey(id) }
-      ?.let { it to Player(user, WgColor.Blue) }
-      ?.let { (lobby, player) -> lobby.addPlayer(player)?.to(player) }
-      ?.also { (lobby, player) -> lobby.save() to player }
-      ?.let { (lobby, player) -> LobbyJoined(player, lobby) to lobby.players.keys }
-      ?: (ErrorEvent("missing access") to setOf(id))
+    is JoinLobby       ->
+      getLobby(action.lobbyID)
+        ?.also { lobby ->
+          lobby.players[id]?.also { return LobbyJoined(it, lobby) to setOf(id) }
+        }
+        ?.let { it to Player(user, WgColor.Blue) }
+        ?.let { (lobby, player) -> lobby.addPlayer(player) to player }
+        ?.also { (lobby) -> lobby.save() }
+        ?.let { (lobby, player) -> LobbyJoined(player, lobby) to lobby.players.keys }
+        ?: (ErrorEvent("missing access") to setOf(id))
 
     is UpdateLobbyName -> getLobbyOf(user)
       ?.takeIf { it.hostID == user.id }

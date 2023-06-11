@@ -39,6 +39,7 @@ import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.isActive
 import org.slf4j.event.Level
 import java.time.Duration
 
@@ -76,7 +77,7 @@ fun Application.configuration() {
   install(WebSockets) {
     contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
     pingPeriod = Duration.ofSeconds(15)
-    timeout = Duration.ofSeconds(15)
+    timeout = Duration.ofSeconds(20)
     maxFrameSize = Long.MAX_VALUE
     masking = PORT !== null
   }
@@ -120,6 +121,7 @@ fun Routing.WebsocketConfiguration() = authenticate("basic") {
             ?.let { connection.handleAction(it) }
             ?.also { println("SEND: ${it.first::class.simpleName}") }
             ?.let { (e, targets) -> e to targets.mapNotNull { getConnection(it) } }
+            ?.let { (e, targets) -> e to targets.filter { it.session.isActive } }
             ?.let { (event, targets) -> targets.forEach { it.session.send(event) } }
 
           is Frame.Close -> onClose(connection.id)

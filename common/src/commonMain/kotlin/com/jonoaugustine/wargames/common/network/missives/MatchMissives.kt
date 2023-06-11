@@ -59,6 +59,10 @@ data class PlaceEntity(val matchID: String, val entity: Entity) : LiveMatchActio
 //data class EntityPlaced(val entity: Entity, override val match: Match) : MatchEvent
 @Serializable
 @SerialName("match.move")
-data class MoveEntity(val entityID: EntityID, val position: Vector) : LiveMatchAction
+data class MoveEntity(
+  val entityID: EntityID,
+  val position: Vector,
+  val rotation: Float? = null
+) : LiveMatchAction
 
 

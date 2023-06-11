@@ -29,7 +29,7 @@ data class Match(
   val lobbyID: String,
   val state: State = State.PLACING,
   val players: Map<UserID, Player> = emptyMap(),
-  val entities: List<Entity> = emptyList(),
+  val entities: Map<EntityID, Entity> = emptyMap(),
   val background: WgColor = WgColor.Grass,
 ) {
 
@@ -48,6 +48,6 @@ data class Match(
   fun updateState(newState: State): Match = copy(state = newState)
 
   fun updateEntities(delta: Float): Match = this.copy(
-    entities = entities.map { it.update(delta, this) }
+    entities = entities.mapValues { it.value.update(delta, this) }
   )
 }

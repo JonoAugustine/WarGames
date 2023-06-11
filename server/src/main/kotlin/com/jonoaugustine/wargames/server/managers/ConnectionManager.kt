@@ -16,7 +16,7 @@ private val mutex = Mutex()
 
 suspend fun getConnection(id: String): Connection? = mutex.withLock { connections[id] }
 
-suspend fun Connection.save() = mutex.withLock { connections -= id }
+suspend fun Connection.save() = mutex.withLock { connections += (id to this) }
 
 /** Returns an existing [Connection] with the given [id] or a new [Connection] */
 suspend fun WebSocketServerSession.getConnectionOrNew(
@@ -24,10 +24,12 @@ suspend fun WebSocketServerSession.getConnectionOrNew(
   name: String
 ): Connection =
   getConnection(id)
-    ?.also { println("reestablished connection ${it.id}") }
+    ?.copy(session = this)
+    ?.also { it.save() }
+    ?.also { println("CONNECT(RENEW): ${it.id}") }
     ?: Connection(User(UUID.randomUUID().toString(), name), this)
       .also { mutex.withLock { connections += (it.id to it) } }
-      .also { println("new connection: ${it.user.id}") }
+      .also { println("CONNECT(NEW): ${it.user.id}") }
 
 suspend fun WebSocketServerSession.onClose(uid: String) {
   // val connection = mutex.withLock { connections[uid] } ?: return
@@ -50,3 +52,8 @@ suspend fun Connection.handleUserAction(action: UserAction): ActionResponse =
       .let { UserUpdated(it.user) } to setOf(id)
   }
 
+context(Connection)
+fun errorEventOf(
+  message: String = "an unknown error occurred",
+  vararg ids: UserID = arrayOf(id)
+): Pair<ErrorEvent, Set<UserID>> = ErrorEvent(message) to setOf(*ids)

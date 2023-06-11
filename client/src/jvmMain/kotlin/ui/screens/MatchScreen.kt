@@ -45,7 +45,7 @@ fun MatchScreen() {
       modifier = Modifier.padding(10.dp)
     )
   }
-  state.match!!.entities
+  state.match!!.entities.values
     .filterIsInstance<BattleUnit>()
     .forEach { it.sprite() }
   PathLayer()
@@ -66,6 +66,7 @@ fun PlacementLayer() {
             position = Vector(offset.x - size.width / 2, offset.y - size.height / 2),
             size = size,
             speed = 2f,
+            color = state.match!!.players[state.user.id]!!.color
           )
             .let { PlaceEntity(state.match!!.id, it) }
             .let { GlobalScope.launch(Dispatchers.IO) { send(it) } }
@@ -78,7 +79,8 @@ context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun PathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-    state.match!!.entities.filterIsInstance<BattleUnit>()
+    state.match!!.entities.values
+      .filterIsInstance<BattleUnit>()
       .forEach { bu ->
         if (bu.path.size <= 1) return@forEach
         drawPath(

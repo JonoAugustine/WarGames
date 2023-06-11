@@ -1,7 +1,9 @@
 package ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.buttonColors
 import androidx.compose.material.OutlinedTextField
@@ -22,6 +24,7 @@ import state.Page.MAIN_MENU
 import state.send
 import ui.BackButton
 import ui.Menu
+import util.composeColor
 import windowSize
 
 context(AppState, DefaultClientWebSocketSession)
@@ -35,10 +38,11 @@ fun LobbyScreen() = Menu {
     modifier = Modifier.offset(windowSize.width.dp / 2, 10.dp)
   )
   Row(
-    Modifier.fillMaxSize(),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.SpaceEvenly
+    Modifier.fillMaxWidth(0.9f),
+    horizontalArrangement = Arrangement.SpaceEvenly,
+    verticalAlignment = Alignment.CenterVertically
   ) {
+    Spacer(Modifier.height(30.dp))
     SettingsColumn()
     PlayerList()
   }
@@ -62,9 +66,9 @@ fun SettingsColumn() {
   var nameText by remember { mutableStateOf(state.lobby!!.name) }
   // Settings
   Column(
-    Modifier.fillMaxHeight().fillMaxWidth(0.4f),
+    Modifier.fillMaxWidth(0.4f),
     verticalArrangement = Arrangement.Center,
-    //horizontalAlignment = Alignment.CenterHorizontally
+    horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Text("Settings", color = Color.White)
     Spacer(Modifier.height(20.dp))
@@ -98,15 +102,29 @@ context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun PlayerList() {
   Column(
-    Modifier.fillMaxHeight().fillMaxWidth(0.4f),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
+    Modifier.fillMaxWidth(0.4f),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.Center
   ) {
+    Text("Players", color = Color.White)
+    Spacer(Modifier.height(15.dp))
     state.lobby!!.players.values.forEach {
-      Box(Modifier.background(Color.White).padding(7.dp)) {
-        Text(          it.user.name,        )
+      Box(
+        Modifier
+          .border(1.dp, Color.White, RoundedCornerShape(5.dp))
+          .fillMaxWidth(0.80f)
+      ) {
+        Row(
+          Modifier.fillMaxWidth(0.90f).padding(0.dp, 4.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Spacer(Modifier.width(10.dp))
+          Box(Modifier.size(10.dp).background(it.color.composeColor))
+          Spacer(Modifier.width(10.dp))
+          Text(it.user.name, color = Color.White)
+        }
       }
-      Spacer(Modifier.height(10.dp))
+      Spacer(Modifier.height(5.dp))
     }
   }
 }
