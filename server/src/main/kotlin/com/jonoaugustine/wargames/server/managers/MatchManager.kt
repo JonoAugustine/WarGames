@@ -1,21 +1,32 @@
 package com.jonoaugustine.wargames.server.managers
 
-import com.jonoaugustine.wargames.common.Entity
-import com.jonoaugustine.wargames.common.Lobby
-import com.jonoaugustine.wargames.common.Match
+import com.jonoaugustine.wargames.common.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.*
 import java.util.Collections.synchronizedMap
 
-private val matches: MutableMap<String, Match> = synchronizedMap(mutableMapOf())
+/**
+ * [PlayerID] -> [Match]
+ *
+ * [MatchID] -> [Match]
+ */
+private var matches: Map<String, Match> = mapOf()
+private val mutex = Mutex()
 
-fun getMatch(id: String): Match? = synchronized(matches) { matches[id] }
-fun setMatch(match: Match) = synchronized(matches) { matches[match.id] = match }
+suspend fun getMatch(id: MatchID): Match? = mutex.withLock { matches[id] }
+suspend fun getMatchOf(user: User): Match? = getMatch(user.id)
+suspend fun Match.save() = mutex.withLock { matches = matches + (id to this) }
 
-fun newMatch(lobby: Lobby): Match =
-  Match(lobbyID = lobby.id, players = lobby.players)
-    .also { synchronized(matches) { matches[it.id] = it } }
+/** Creates a new [Match] using an existing [Lobby] */
+fun newMatch(lobby: Lobby): Match = Match(
+  id = UUID.randomUUID().toString(),
+  lobbyID = lobby.id,
+  players = lobby.players
+)
 
 /**
- * Returns an updated Match IF no existing entities collide with the given [entity]
+ * Creates a new [Match] state IF no existing entities collide with the given [entity]
  */
 fun Match.addEntity(entity: Entity): Match? =
   entity

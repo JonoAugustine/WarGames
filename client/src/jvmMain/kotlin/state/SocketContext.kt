@@ -1,10 +1,19 @@
 package state
 
 import Eventbus
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.Action
+import com.jonoaugustine.wargames.common.network.missives.CreateMatch
 import com.jonoaugustine.wargames.common.network.missives.Event
+import com.jonoaugustine.wargames.common.network.missives.UpdateLobbyName
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
@@ -20,9 +29,11 @@ import io.ktor.websocket.Frame.Close
 import io.ktor.websocket.Frame.Text
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import state.AttemptState.ATTEMPTING
@@ -32,6 +43,8 @@ import state.AttemptState.WAITING
 import ui.screens.LoadingScreen
 import kotlin.io.path.Path
 import kotlin.io.path.readText
+import kotlin.random.Random
+import kotlin.random.Random.Default
 import kotlin.time.Duration.Companion.seconds
 
 // TODO move credentials class to a file manager or something
@@ -39,22 +52,18 @@ import kotlin.time.Duration.Companion.seconds
 private data class Credentials(val id: String, val name: String)
 private enum class AttemptState { ATTEMPTING, WAITING, DONE, FAILED }
 
-private val client = HttpClient {
-  install(WebSockets) {
-    contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
-    pingInterval = 1000L * 15
-  }
-}
-private const val maxAttempts = 5
+private const val maxAttempts = 3
 private const val retryDelay = 10
 private val credentials =
-  Path(System.getProperty("user.dir"), ".credentials.json").readText()
+  Path(System.getProperty("user.dir"), ".credentials.json")
+    .readText()
     .let { JsonConfig.decodeFromString<Credentials>(it) }
+    .let { it.copy(id = it.id + Random.nextBits(4), name = it.name + Random.nextBits(4)) }
 
 /**
  * Hoisted [websocket](DefaultClientWebSocketSession) state wrapper
  *
- * TODO auto reconnecting
+ * TODO fix auto reconnecting bugs
  */
 context(AppState)
 @Composable
@@ -112,7 +121,7 @@ fun SocketContext(content: @Composable DefaultClientWebSocketSession.() -> Unit)
 
     attemptState = FAILED
     socket = null
-    attempts = 0
+    attempts = 1
   }
 
   when (attemptState) {
@@ -120,6 +129,17 @@ fun SocketContext(content: @Composable DefaultClientWebSocketSession.() -> Unit)
     WAITING    -> LoadingScreen("Failed to connect to server. Attempting again in ${attemptTimer}s")
     ATTEMPTING -> LoadingScreen("Waiting for socket connection (attempt ${attempts + 1})")
     DONE       -> content(socket!!)
+  }
+  if (attemptState == FAILED) Column(
+    Modifier.fillMaxSize(0.98F),
+    verticalArrangement = Arrangement.Bottom,
+    horizontalAlignment = Alignment.End
+  ) {
+    Button(
+      colors = buttonColors(Color.Red),
+      onClick = { attempts = 0 },
+      content = { Text("Reconnect") }
+    )
   }
 }
 

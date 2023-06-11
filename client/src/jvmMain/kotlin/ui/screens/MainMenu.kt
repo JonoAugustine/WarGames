@@ -15,9 +15,11 @@ import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.network.missives.CreateLobby
 import com.jonoaugustine.wargames.common.network.missives.UpdateUsername
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.LOBBY
+import state.Page.LOBBY_BROWSER
 import state.send
 import ui.Menu
 
@@ -35,12 +37,18 @@ fun MainMenu() = Menu {
     Button(
       colors = buttonColors(backgroundColor = Color.Green),
       onClick = { scope.launch { send(CreateLobby) } },
-      content = { Text("Start Lobby") }
+      content = { Text("Create Lobby") }
+    )
+    Button(
+      colors = buttonColors(backgroundColor = Color.White),
+      onClick = { goTo(LOBBY_BROWSER) },
+      content = { Text("Browse Lobby") }
     )
     Row(verticalAlignment = Alignment.CenterVertically) {
       OutlinedTextField(
         value = text,
         onValueChange = { text = it.trim() },
+        modifier = Modifier,
         colors = TextFieldDefaults.outlinedTextFieldColors(
           textColor = Color.White,
           focusedBorderColor = Color.Green,
@@ -52,9 +60,9 @@ fun MainMenu() = Menu {
       )
       Button(
         colors = buttonColors(backgroundColor = Color.White),
-        onClick = { scope.launch { send(UpdateUsername(text)) } },
+        onClick = { scope.launch(Dispatchers.IO) { send(UpdateUsername(text)) } },
         content = { Text("Save") },
-        modifier = Modifier.padding(horizontal = 5.dp)
+        modifier = Modifier.padding(horizontal = 5.dp).height(35.dp)
       )
     }
   }

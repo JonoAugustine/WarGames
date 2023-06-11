@@ -1,6 +1,7 @@
 package com.jonoaugustine.wargames.common.network.missives
 
 import com.jonoaugustine.wargames.common.Lobby
+import com.jonoaugustine.wargames.common.LobbyID
 import com.jonoaugustine.wargames.common.Player
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -35,3 +36,11 @@ data class LobbyJoined(val player: Player, val lobby: Lobby) : LobbyEvent
 @Serializable
 @SerialName("lobby.left")
 data class LobbyLeft(val playerID: String, val lobby: Lobby) : LobbyEvent
+
+@Serializable
+@SerialName("lobby.updateName")
+data class UpdateLobbyName(val lobbyID: LobbyID, val name: String) : LobbyAction
+
+@Serializable
+@SerialName("lobby.updated")
+data class LobbyUpdated(val lobby: Lobby) : LobbyEvent

@@ -49,7 +49,7 @@ data class MatchStarted(override val match: Match) : MatchEvent
 
 @Serializable
 @SerialName("placement")
-data class EntityPlacement(val matchID: String, val entity: Entity) : MatchAction
+data class PlaceEntity(val matchID: String, val entity: Entity) : MatchAction
 
 @Serializable
 @SerialName("placed")

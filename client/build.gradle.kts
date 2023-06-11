@@ -23,6 +23,7 @@ kotlin {
         implementation(kotlinx("coroutines-core", "1.7.1"))
         implementation(ktor("serialization-kotlinx-json"))
         implementation(ktor.client("core"))
+        implementation(ktor.client("content-negotiation"))
         implementation(ktor.client("cio"))
         implementation(ktor.client("websockets"))
         implementation(ktor.client("logging"))

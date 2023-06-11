@@ -12,17 +12,34 @@ val JsonConfig = Json {
   encodeDefaults = true
   serializersModule = SerializersModule {
     polymorphic(Action::class) {
+      // USER
+      subclass(UpdateUsername::class)
+      // LOBBY
+      subclass(CreateLobby::class)
+      subclass(UpdateLobbyName::class)
+      subclass(JoinLobby::class)
+      subclass(CloseLobby::class)
+      // MATCH
       subclass(CreateMatch::class)
-      subclass(Start::class)
       subclass(JoinMatch::class)
+      subclass(Start::class)
+      subclass(PlaceEntity::class)
     }
     polymorphic(Event::class) {
       subclass(ErrorEvent::class)
+      // USER
+      subclass(UserConnected::class)
+      // Lobby
+      subclass(LobbyClosed::class)
+      subclass(LobbyJoined::class)
+      subclass(LobbyLeft::class)
+      subclass(LobbyUpdated::class)
+      // Match
+      subclass(MatchCreated::class)
       subclass(MatchJoined::class)
       subclass(MatchLeft::class)
-      subclass(MatchCreated::class)
       subclass(MatchStarted::class)
-      subclass(UserConnected::class)
+      subclass(EntityPlaced::class)
     }
   }
 }

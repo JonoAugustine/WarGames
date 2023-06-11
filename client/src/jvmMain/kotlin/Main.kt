@@ -7,9 +7,12 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import state.AppState
 import state.Page.LOBBY
+import state.Page.LOBBY_BROWSER
 import state.Page.MAIN_MENU
 import state.Page.MATCH_PLAY
 import state.SocketContext
+import ui.Toast
+import ui.screens.LobbyBrowser
 import ui.screens.LobbyScreen
 import ui.screens.MainMenu
 import ui.screens.MatchScreen
@@ -25,19 +28,14 @@ fun main() = application {
     resizable = false,
     onCloseRequest = ::exitApplication,
   ) {
-//    LaunchedEffect(Unit) {
-    //      while (true) {
-    //        println("WATCHER: ${appState.state}")
-    //        delay(15.seconds)
-    //      }
-    //    }
     MaterialTheme {
       with(appState) {
         SocketContext {
           when (page) {
-            MAIN_MENU  -> MainMenu()
-            LOBBY      -> LobbyScreen()
-            MATCH_PLAY -> MatchScreen()
+            MAIN_MENU     -> MainMenu()
+            LOBBY_BROWSER -> LobbyBrowser()
+            LOBBY         -> LobbyScreen()
+            MATCH_PLAY    -> MatchScreen()
           }
         }
       }

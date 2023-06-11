@@ -27,3 +27,4 @@ Table-top, unit-based war military maneuver game.
 - unit path smoothing (grid snapping maybe?)
 - improve collision response
 - networking
+- toasts system

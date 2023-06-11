@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jonoaugustine.wargames.common.Color
+import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.DarkGray
 import kotlinx.coroutines.delay
 import util.composeColor
@@ -33,13 +33,13 @@ fun LoadingScreen(inText: String? = null) {
   }
 
   Box(
-    modifier = Modifier.fillMaxSize().background(Color.DarkGray.composeColor),
+    modifier = Modifier.fillMaxSize().background(WgColor.DarkGray.composeColor),
     contentAlignment = Alignment.BottomEnd
   ) {
     Text(
       text = inText ?: defaultText,
       textAlign = TextAlign.Left,
-      color = Color(200u, 200u, 200u).composeColor,
+      color = WgColor(200u, 200u, 200u).composeColor,
       modifier = Modifier.align(Alignment.BottomStart).padding(10.dp),
     )
   }

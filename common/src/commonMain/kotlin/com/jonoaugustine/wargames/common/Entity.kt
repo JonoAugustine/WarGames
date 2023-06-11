@@ -1,8 +1,10 @@
 package com.jonoaugustine.wargames.common
 
+typealias EntityID = String
+
 sealed interface Entity {
 
-  val id: String
+  val id: EntityID
   val position: Vector
   val size: Size
   val rotation: Float
@@ -24,7 +26,7 @@ sealed interface BattleUnit : Entity {
 
   val speed: Float
   val path: List<Vector>
-  val color: Color get() = Color()
+  val color: WgColor get() = WgColor()
   override val collisionBox: Rectangle
     get() = Rectangle(
       Vector(position.x - collisionMargin, position.y - collisionMargin),
@@ -44,7 +46,7 @@ data class Infantry(
   override val rotation: Float,
   override val speed: Float,
   override val path: List<Vector> = emptyList(),
-  override val color: Color = Color(200u),
+  override val color: WgColor = WgColor(200u),
   private val step: Float = 0f,
 ) : BattleUnit {
 

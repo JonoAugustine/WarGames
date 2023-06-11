@@ -1,8 +1,5 @@
 package com.jonoaugustine.wargames.common.network.missives
 
-import com.jonoaugustine.wargames.common.Entity
-import com.jonoaugustine.wargames.common.Match
-import com.jonoaugustine.wargames.common.Player
 import com.jonoaugustine.wargames.common.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
