@@ -9,7 +9,7 @@ import java.util.*
 /**
  * dan niki
  *
- * [PlayerID] -> [Lobby]
+ * [U]serID -> [Lobby]
  *
  * [LobbyID] -> [Lobby]
  */

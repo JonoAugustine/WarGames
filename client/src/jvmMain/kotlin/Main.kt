@@ -16,7 +16,7 @@ import ui.screens.LobbyScreen
 import ui.screens.MainMenu
 import ui.screens.MatchScreen
 
-val windowSize = Size(1920f / 2, 1080f / 2)
+val windowSize = Size(1000f, 600f)
 
 fun main() = application {
   val appState = remember { AppState }

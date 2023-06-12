@@ -22,9 +22,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import com.jonoaugustine.wargames.common.*
 import com.jonoaugustine.wargames.common.Match.State.PLACING
+import com.jonoaugustine.wargames.common.Match.State.PLANNING
+import com.jonoaugustine.wargames.common.Vector
+import com.jonoaugustine.wargames.common.entities.BattleUnit
+import com.jonoaugustine.wargames.common.entities.center
 import com.jonoaugustine.wargames.common.network.missives.MoveEntity
+import com.jonoaugustine.wargames.common.network.missives.SetEntityPath
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -37,55 +41,39 @@ import util.composeColor
 import util.dp
 
 context(AppState, DefaultClientWebSocketSession)
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
-fun spriteOf(unit: BattleUnit) {
-  var dragPos by mutableStateOf(unit.position)
+fun spriteOf(bu: BattleUnit) {
   var movePreview: Vector by mutableStateOf(Vector())
 
   HoverBox(
-    Modifier.offset(unit.position.x.dp, unit.position.y.dp)
-      .size(unit.size.dp)
-      .rotate(unit.rotation)
-      .background(unit.color.composeColor)
+    Modifier.offset(bu.position.x.dp, bu.position.y.dp)
+      .size(bu.size.dp)
+      .rotate(bu.rotation)
+      .background(bu.color.composeColor)
       .border(1.dp, Color.Black)
-      .pointerInput(unit) {
-        detectDragGestures(
-          onDragEnd = {
-            GlobalScope.launch(Dispatchers.IO) { send(MoveEntity(unit.id, dragPos)) }
-            movePreview = Vector()
-          }
-        ) { change, _ ->
-          if (state.match!!.state != PLACING) return@detectDragGestures
-          movePreview = Vector(
-            change.position.x - unit.size.width / 2,
-            change.position.y - unit.size.height / 2
-          )
-          dragPos = Vector(
-            (change.position.x + unit.position.x) - (unit.size.width / 2),
-            (change.position.y + unit.position.y) - (unit.size.height / 2),
-          )
-        }
+      .pointerInput(bu, state.match!!.state) {
+        if (state.match!!.state == PLACING)
+          handleUnitDragging(bu) { movePreview = it }
       }
   ) { hovering ->
-    UnitEnsign(unit)
-    if (movePreview.x + movePreview.y != 0f) UnitEnsign(unit, movePreview)
-    if (state.match!!.state == Match.State.PLANNING) {
+    UnitEnsign(bu)
+    // TODO unit doesn't show preview on first drag
+    if (movePreview.x + movePreview.y != 0f) UnitEnsign(bu, movePreview)
+    if (state.match!!.state == PLANNING) {
       val pathSelectorSize = Size(10f, 10f)
       Box(Modifier.clip(CircleShape)
         .background(Color.Black.copy(alpha = if (hovering) 0.7f else 0f))
         .size(pathSelectorSize.dp)
-        .pointerInput(Unit) { with(unit) { recordPath() } }
-        .offset(
-          (unit.center.x - pathSelectorSize.width / 2).dp,
-          (unit.center.y - pathSelectorSize.height / 2).dp
-        ))
+        .pointerInput(bu) { recordPath(bu) }
+        // TODO path start point offset not working
+        .offset(100.dp, 100.dp)
+      )
     }
   }
 }
 
 @Composable
-fun UnitEnsign(unit: BattleUnit, offset: Vector = Vector()) {
+private fun UnitEnsign(unit: BattleUnit, offset: Vector = Vector()) {
   Canvas(Modifier.fillMaxSize().offset(offset.x.dp, offset.y.dp)) {
     drawPath(color = Color.Black, style = Stroke(1f), path = Path().apply {
       moveTo(0f, 0f)
@@ -96,26 +84,54 @@ fun UnitEnsign(unit: BattleUnit, offset: Vector = Vector()) {
   }
 }
 
-context (Entity)
-@OptIn(ExperimentalComposeUiApi::class)
-suspend fun PointerInputScope.recordPath() {
+context(AppState, DefaultClientWebSocketSession, PointerInputScope)
+@OptIn(DelicateCoroutinesApi::class)
+private suspend fun handleUnitDragging(
+  unit: BattleUnit,
+  setPreviewPosition: (Vector) -> Unit,
+) {
+  var dragPos by mutableStateOf(unit.position)
+  detectDragGestures(
+    onDragEnd = {
+      GlobalScope.launch(Dispatchers.IO) { send(MoveEntity(unit.id, dragPos)) }
+      setPreviewPosition(Vector())
+    }
+  ) { change, _ ->
+    setPreviewPosition(
+      Vector(
+        change.position.x - unit.size.width / 2,
+        change.position.y - unit.size.height / 2
+      )
+    )
+    dragPos = Vector(
+      (change.position.x + unit.position.x) - (unit.size.width / 2),
+      (change.position.y + unit.position.y) - (unit.size.height / 2),
+    )
+  }
+}
+
+context(DefaultClientWebSocketSession, PointerInputScope)
+@OptIn(ExperimentalComposeUiApi::class, DelicateCoroutinesApi::class)
+private suspend fun recordPath(bu: BattleUnit) {
   var path by mutableStateOf(listOf<Vector>())
   var initialOffset = Offset(0f, 0f)
   detectDragGestures(onDragStart = { offset ->
     initialOffset = offset
-    path = mutableStateListOf(Vector(center.x, center.y))
+    path = mutableStateListOf(Vector(bu.center.x, bu.center.y))
   }, onDrag = { change, _ ->
     path = path + change.historical.map { it.position }.map {
       Vector(
-        it.x + center.x - initialOffset.x, it.y + center.y - initialOffset.y
+        it.x + bu.center.x - initialOffset.x,
+        it.y + bu.center.y - initialOffset.y
       )
     }.plus(change.position.let {
       Vector(
-        it.x + center.x - initialOffset.x, it.y + center.y - initialOffset.y
+        it.x + bu.center.x - initialOffset.x,
+        it.y + bu.center.y - initialOffset.y
       )
     })
   }, onDragEnd = {
-    TODO("send path update")
+    GlobalScope.launch(Dispatchers.IO) { send(SetEntityPath(bu.id, path)) }
   })
 }
 

@@ -1,5 +1,7 @@
 package com.jonoaugustine.wargames.common
 
+import com.jonoaugustine.wargames.common.entities.Entity
+import com.jonoaugustine.wargames.common.entities.Infantry
 import com.jonoaugustine.wargames.common.network.missives.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -23,6 +25,8 @@ val JsonConfig = Json {
       subclass(CreateMatch::class)
       subclass(StartMatch::class)
       subclass(PlaceEntity::class)
+      subclass(SetMatchState::class)
+      subclass(SetEntityPath::class)
     }
     polymorphic(Event::class) {
       subclass(ErrorEvent::class)

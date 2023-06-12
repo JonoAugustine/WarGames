@@ -67,10 +67,8 @@ object AppState {
     }
   }
 
-  private suspend fun update(block: (AppStateData) -> AppStateData) {
-    println("STATE: updating data")
+  private suspend fun update(block: (AppStateData) -> AppStateData) =
     this.mutex.withLock { state = block(state) }
-  }
 
   context(CoroutineScope)
   private fun listenToUserEvents() {

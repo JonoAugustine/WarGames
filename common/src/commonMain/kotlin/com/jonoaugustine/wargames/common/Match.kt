@@ -1,5 +1,7 @@
 package com.jonoaugustine.wargames.common
 
+import com.jonoaugustine.wargames.common.entities.Entity
+import com.jonoaugustine.wargames.common.entities.EntityID
 import kotlinx.serialization.Serializable
 
 typealias LobbyID = String
@@ -38,16 +40,4 @@ data class Match(
     PLANNING,
     RUNNING
   }
-
-  // TODO move functions to server match manager
-  fun setState(state: State): Match = copy(state = state)
-
-  fun addPlayer(user: User, color: WgColor): Match =
-    copy(players = this.players + Pair(user.id, Player(user, color)))
-
-  fun updateState(newState: State): Match = copy(state = newState)
-
-  fun updateEntities(delta: Float): Match = this.copy(
-    entities = entities.mapValues { it.value.update(delta, this) }
-  )
 }

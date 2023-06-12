@@ -17,6 +17,7 @@ fun HoverBox(
   var mouseOver by remember { mutableStateOf(false) }
   Box(
     Modifier
+      .then(modifier)
       .onPointerEvent(PointerEventType.Enter) {
         mouseOver = true
         onHoverChange(true)
@@ -24,8 +25,7 @@ fun HoverBox(
       .onPointerEvent(PointerEventType.Exit) {
         mouseOver = false
         onHoverChange(false)
-      }
-      .then(modifier),
-    content = { content(mouseOver) }
+      },
+    content = { content(mouseOver) },
   )
 }

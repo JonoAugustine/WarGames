@@ -1,9 +1,9 @@
 package com.jonoaugustine.wargames.common.network.missives
 
-import com.jonoaugustine.wargames.common.Entity
-import com.jonoaugustine.wargames.common.EntityID
 import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.Vector
+import com.jonoaugustine.wargames.common.entities.Entity
+import com.jonoaugustine.wargames.common.entities.EntityID
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -49,6 +49,10 @@ data class MatchLeft(override val match: Match, val playerID: String) : MatchEve
 @SerialName("match.start")
 object StartMatch : LiveMatchAction
 
+@Serializable
+@SerialName("match.state")
+data class SetMatchState(val state: Match.State) : LiveMatchAction
+
 //@Serializable
 //@SerialName("match.started")
 //data class MatchStarted(override val match: Match) : MatchEvent
@@ -70,4 +74,7 @@ data class MoveEntity(
   val rotation: Float? = null
 ) : LiveMatchAction
 
+@Serializable
+@SerialName("match.path")
+data class SetEntityPath(val entityID: EntityID, val path: List<Vector>) : LiveMatchAction
 

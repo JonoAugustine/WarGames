@@ -97,7 +97,6 @@ fun SocketContext(content: @Composable DefaultClientWebSocketSession.() -> Unit)
       incoming.consumeEach { frame ->
         when (frame) {
           is Text  -> frame.readEvent()
-            ?.also { println("SOCKET: ${it::class.simpleName}") }
             ?.let { Eventbus.announce(it) }
             ?: println("failed to process frame $frame")
 
