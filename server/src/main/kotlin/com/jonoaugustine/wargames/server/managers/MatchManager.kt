@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.withLock
 import java.util.*
 
 /**
- * [PlayerID] -> [Match]
+ * [UserID] -> [Match]
  *
  * [MatchID] -> [Match]
  */
@@ -42,7 +42,7 @@ fun Match.addEntity(entity: Entity): Match? =
     }
     ?.let { this.copy(entities = this.entities + (it.id to it)) }
 
-suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse? =
+suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse =
   when (action) {
     is CreateMatch     -> getLobbyOf(user)
       ?.let { newMatch(it) }
@@ -58,7 +58,7 @@ suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse? =
 suspend fun Connection.handleLiveMatchAction(
   action: LiveMatchAction,
   match: Match
-): ActionResponse? =
+): ActionResponse =
   when (action) {
     StartMatch     -> TODO()
     is PlaceEntity -> action.entity

@@ -92,10 +92,8 @@ object AppState {
 
   context(CoroutineScope)
   private fun listenToMatchEvents() {
-    Eventbus<MatchEvent> { event ->
-      update { it.copy(match = event.match) }
-      if (event is MatchCreated) goTo(MATCH_PLAY)
-    }
+    Eventbus<MatchEvent> { (match) -> update { it.copy(match = match) } }
+    Eventbus<MatchCreated> { goTo(MATCH_PLAY) }
   }
 
   fun goTo(page: Page) {

@@ -21,6 +21,8 @@ sealed interface LiveMatchAction : MatchAction
 sealed interface MatchEvent : Event {
 
   val match: Match
+
+  operator fun component1() = match
 }
 
 @Serializable
@@ -41,7 +43,7 @@ data class JoinMatch(val matchID: String) : LiveMatchAction
 
 @Serializable
 @SerialName("match.left")
-data class MatchLeft(val playerID: String, override val match: Match) : MatchEvent
+data class MatchLeft(override val match: Match, val playerID: String) : MatchEvent
 
 @Serializable
 @SerialName("match.start")
@@ -53,10 +55,13 @@ object StartMatch : LiveMatchAction
 @Serializable
 @SerialName("match.place")
 data class PlaceEntity(val matchID: String, val entity: Entity) : LiveMatchAction
-
 //@Serializable
 //@SerialName("match.placed")
 //data class EntityPlaced(val entity: Entity, override val match: Match) : MatchEvent
+/**
+ * @property position new position
+ * @property rotation new rotation
+ */
 @Serializable
 @SerialName("match.move")
 data class MoveEntity(

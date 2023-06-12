@@ -1,6 +1,5 @@
 package ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.buttonColors
@@ -18,10 +17,9 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import state.AppState
-import state.Page.LOBBY
 import state.Page.LOBBY_BROWSER
 import state.send
-import ui.Menu
+import ui.components.Menu
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable

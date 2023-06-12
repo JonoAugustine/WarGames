@@ -17,6 +17,7 @@ sealed interface Entity {
     this.collisionBox.overlaps(other.collisionBox)
 }
 
+/** Coordinate [Vector] of the center point of this [Entity] */
 val Entity.center
   get() = Vector(position.x + size.width / 2, position.y + size.height / 2)
 

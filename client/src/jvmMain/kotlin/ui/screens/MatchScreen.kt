@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -28,9 +29,9 @@ import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.MAIN_MENU
 import state.send
-import ui.sprite
+import ui.components.Grid
+import ui.spriteOf
 import util.composeColor
-import kotlin.random.Random
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable
@@ -47,8 +48,22 @@ fun MatchScreen() {
   }
   state.match!!.entities.values
     .filterIsInstance<BattleUnit>()
-    .forEach { it.sprite() }
+    .forEach { spriteOf(it) }
   PathLayer()
+  Grid()
+
+  LaunchedEffect(Unit) {
+    val size = WgSize(50, 25)
+    Infantry(
+      id = "",
+      position = Vector(200f,200f),
+      size = size,
+      speed = 2f,
+      color = state.match!!.players[state.user.id]!!.color
+    )
+      .let { PlaceEntity(state.match!!.id, it) }
+      .let { GlobalScope.launch(Dispatchers.IO) { send(it) } }
+  }
 }
 
 context(AppState, DefaultClientWebSocketSession)
@@ -60,7 +75,7 @@ fun PlacementLayer() {
       .fillMaxSize()
       .pointerInput(Unit) {
         detectTapGestures { offset ->
-          val size = WgSize(if (Random.nextBoolean()) 25 else 50, 25)
+          val size = WgSize(50, 25)
           Infantry(
             id = "",
             position = Vector(offset.x - size.width / 2, offset.y - size.height / 2),

@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.MAIN_MENU
 import state.send
-import ui.Menu
+import ui.components.Menu
 import windowSize
 
 context(AppState, DefaultClientWebSocketSession)

@@ -22,32 +22,36 @@ import kotlinx.coroutines.launch
 import state.AppState
 import state.Page.MAIN_MENU
 import state.send
-import ui.BackButton
-import ui.Menu
+import ui.components.BackButton
+import ui.components.Menu
 import util.composeColor
-import windowSize
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun LobbyScreen() = Menu {
   val scope = rememberCoroutineScope()
   BackButton(MAIN_MENU, "Main Menu")
-  Text(
-    state.lobby!!.name,
-    color = Color.White,
-    modifier = Modifier.offset(windowSize.width.dp / 2, 10.dp)
-  )
+  Column(
+    Modifier.fillMaxSize(0.95f),
+    verticalArrangement = Arrangement.Top,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Text(
+      state.lobby!!.name,
+      color = Color.White,
+    )
+  }
+  Spacer(Modifier.height(30.dp))
   Row(
     Modifier.fillMaxWidth(0.9f),
     horizontalArrangement = Arrangement.SpaceEvenly,
     verticalAlignment = Alignment.CenterVertically
   ) {
-    Spacer(Modifier.height(30.dp))
     SettingsColumn()
     PlayerList()
   }
   if (state.user.id == state.lobby!!.hostID) Column(
-    Modifier.fillMaxSize(0.98F),
+    Modifier.fillMaxSize(0.98f),
     verticalArrangement = Arrangement.Bottom,
     horizontalAlignment = Alignment.End
   ) {

@@ -1,4 +1,4 @@
-package ui
+package ui.components
 
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.Button

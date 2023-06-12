@@ -3,7 +3,7 @@ package com.jonoaugustine.wargames.common
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Vector(val x: Float, val y: Float) {
+data class Vector(val x: Float = 0f, val y: Float = 0f) {
 
   operator fun times(scale: Float): Vector {
     return Vector(this.x * scale, this.y * scale)

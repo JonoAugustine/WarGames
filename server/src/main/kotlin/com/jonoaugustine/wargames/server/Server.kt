@@ -77,7 +77,7 @@ fun Application.configuration() {
   install(WebSockets) {
     contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
     pingPeriod = Duration.ofSeconds(15)
-    timeout = Duration.ofSeconds(20)
+    timeout = Duration.ofSeconds(90)
     maxFrameSize = Long.MAX_VALUE
     masking = PORT !== null
   }
