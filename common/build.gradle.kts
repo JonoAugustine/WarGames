@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
@@ -18,4 +20,9 @@ kotlin {
       }
     }
   }
+
+  tasks.withType<KotlinCompile> {
+    kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
+  }
 }
+

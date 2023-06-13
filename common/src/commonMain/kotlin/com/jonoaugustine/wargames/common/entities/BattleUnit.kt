@@ -5,15 +5,41 @@ import com.jonoaugustine.wargames.common.Match.State.RUNNING
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed interface BattleUnit : Entity {
+sealed interface PathBoundEntity : Entity {
+
+  val path: List<Vector>
+  val step: Float
+  val speed: Float
+
+  fun copy(
+    path: List<Vector> = this.path,
+    step: Float = this.step,
+    speed: Float = this.speed
+  ): PathBoundEntity
+
+  fun move(delta: Float): Any =
+    takeIf { path.isNotEmpty() }
+      .let { it ?: return this }
+      .takeIf { step.toInt() < path.size }
+      .let { it ?: return copy(path = emptyList()) }
+      // calc travel distance
+      .let { step + delta * speed }
+      .let { travel -> travel to (travel.toInt() == step.toInt()) }
+      // return early with no actionable travel
+      .let { (travel, isOld) -> if (isOld) return copy(step = travel) else travel }
+      // get the next position
+      .let { travel -> travel to (path.getOrNull(travel.toInt()) ?: path.last()) }
+      .let { (t, pos) -> t to Vector(pos.x - size.width / 2, pos.y - size.height / 2) }
+      .let { (travel, newPos) -> copy() }
+}
+
+sealed interface BattleUnit : PathBoundEntity {
 
   companion object {
 
     const val collisionMargin = 2
   }
 
-  val speed: Float
-  val path: List<Vector>
   val color: WgColor get() = WgColor()
   override val collisionBox: Rectangle
     get() = Rectangle(
@@ -37,8 +63,15 @@ data class Infantry(
   override val rotation: Float = 0f,
   override val path: List<Vector> = emptyList(),
   override val color: WgColor = WgColor(200u),
-  private val step: Float = 0f,
+  override val step: Float = 0f,
 ) : BattleUnit {
+
+  override fun copy(path: List<Vector>, step: Float, speed: Float): Infantry {
+    TODO("Not yet implemented")
+  }
+
+  override fun copy() {
+  }
 
   override fun update(delta: Float, match: Match): Infantry =
     this.takeIf { match.state == RUNNING }
@@ -89,8 +122,16 @@ data class Archer(
   override val path: List<Vector> = emptyList(),
   override val color: WgColor = WgColor(200u),
   val range: ClosedRange<Float>,
-  private val step: Float = 0f,
+  override val step: Float = 0f,
 ) : BattleUnit {
+
+  override fun copy(path: List<Vector>, step: Float, speed: Float): Archer {
+    TODO("Not yet implemented")
+  }
+
+  override fun copy() {
+    TODO("Not yet implemented")
+  }
 
   override fun update(delta: Float, match: Match): Archer =
     this.takeIf { path.isNotEmpty() }

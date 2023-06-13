@@ -1,5 +1,6 @@
 package com.jonoaugustine.wargames.common
 
+import com.jonoaugustine.wargames.common.entities.Archer
 import com.jonoaugustine.wargames.common.entities.Entity
 import com.jonoaugustine.wargames.common.entities.Infantry
 import com.jonoaugustine.wargames.common.network.missives.*
@@ -47,6 +48,7 @@ val JsonConfig = Json {
     }
     polymorphic(Entity::class) {
       subclass(Infantry::class)
+      subclass(Archer::class)
     }
   }
 }

@@ -11,6 +11,8 @@ sealed interface Entity {
   val size: WgSize
   val rotation: Float
   val collisionBox: Rectangle
+
+  fun copy()
   fun update(delta: Float, match: Match): Entity
   fun collidesWith(other: Entity): Boolean =
     this.collisionBox.overlaps(other.collisionBox)

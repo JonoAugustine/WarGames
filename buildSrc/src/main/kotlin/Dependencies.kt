@@ -4,7 +4,7 @@ object Versions {
   const val serialization = "1.5.1"
   const val ktor = "2.3.1"
   const val logback = "1.4.7"
-  const val compose = "1.4.0"
+  const val compose = "1.4.2"
 }
 
 fun kotlinx(project: String, version: String) = """org.jetbrains.kotlinx:kotlinx-$project:$version"""

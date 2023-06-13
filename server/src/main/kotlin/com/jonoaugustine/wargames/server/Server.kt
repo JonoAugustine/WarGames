@@ -45,6 +45,7 @@ import java.time.Duration
 
 val PORT: Int? = System.getenv("PORT")?.toInt()
 
+// TODO move to action queue
 fun main() {
   embeddedServer(
     CIO,
