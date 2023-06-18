@@ -13,7 +13,7 @@ repositories {
 
 kotlin {
   jvm {
-    jvmToolchain(11)
+    jvmToolchain(17)
     withJava()
   }
   sourceSets {
@@ -27,6 +27,7 @@ kotlin {
         implementation(ktor.client("cio"))
         implementation(ktor.client("websockets"))
         implementation(ktor.client("logging"))
+        implementation("io.github.quillraven.fleks:Fleks:${Versions.fleks}")
       }
     }
     val jvmMain by getting {

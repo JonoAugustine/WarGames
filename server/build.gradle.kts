@@ -4,10 +4,6 @@ plugins {
   application
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   implementation(project(":common"))
   implementation(kotlin("stdlib-jdk8"))
@@ -20,11 +16,7 @@ dependencies {
   implementation(ktor.server("auth"))
   implementation(ktor.server("call-logging"))
   implementation("ch.qos.logback:logback-classic:${Versions.logback}")
-  implementation("io.ktor:ktor-server-cors-jvm:2.3.1")
-  implementation("io.ktor:ktor-server-core-jvm:2.3.1")
-  implementation("io.ktor:ktor-server-websockets-jvm:2.3.1")
-  implementation("io.ktor:ktor-server-sessions-jvm:2.3.1")
-  implementation("io.ktor:ktor-server-auth-jvm:2.3.1")
+  implementation("io.github.quillraven.fleks:Fleks:${Versions.fleks}")
 
   testImplementation("io.ktor:ktor-server-test-host-jvm:2.3.1")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.21")

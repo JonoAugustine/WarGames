@@ -1,9 +1,9 @@
 package com.jonoaugustine.wargames.common.network.missives
 
 import com.jonoaugustine.wargames.common.Match
-import com.jonoaugustine.wargames.common.Vector
 import com.jonoaugustine.wargames.common.entities.Entity
 import com.jonoaugustine.wargames.common.entities.EntityID
+import com.jonoaugustine.wargames.common.math.Vector
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

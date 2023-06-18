@@ -1,25 +1,7 @@
-package com.jonoaugustine.wargames.common
+package com.jonoaugustine.wargames.common.math
 
+import com.jonoaugustine.wargames.common.WgSize
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class Vector(val x: Float = 0f, val y: Float = 0f) {
-
-  operator fun times(scale: Float): Vector {
-    return Vector(this.x * scale, this.y * scale)
-  }
-
-  operator fun plus(vector: Vector): Vector {
-    return Vector(this.x + vector.x, this.y + vector.y)
-  }
-
-  operator fun minus(vector: Vector): Vector {
-    return this + vector * -1f
-  }
-}
-
-@Serializable
-data class WgSize(val width: Int, val height: Int)
 
 @Serializable
 data class Rectangle(val origin: Vector, val size: WgSize)

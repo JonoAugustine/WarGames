@@ -7,20 +7,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import com.jonoaugustine.wargames.common.Grass
 import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.Match.State.PLACING
-import com.jonoaugustine.wargames.common.Vector
+import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.WgSize
+import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
+import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
 import com.jonoaugustine.wargames.common.entities.BattleUnit
 import com.jonoaugustine.wargames.common.entities.Infantry
-import com.jonoaugustine.wargames.common.network.missives.PlaceEntity
+import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.SetMatchState
+import com.jonoaugustine.wargames.common.network.missives.SpawnUnit
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +35,7 @@ import state.AppState
 import state.Page.MAIN_MENU
 import state.send
 import ui.components.Grid
-import ui.spriteOf
+import ui.sprites.units.infantrySpriteOf
 import util.composeColor
 import java.util.*
 
@@ -41,7 +46,8 @@ fun MatchScreen() {
   if (state.match == null) return goTo(MAIN_MENU)
   val nextState = Match.State.values().asList()
     .getOrElse(state.match!!.state.ordinal + 1) { PLACING }
-  Box(Modifier.fillMaxSize().background(state.match!!.background.composeColor))
+  //
+  Box(Modifier.fillMaxSize().background(WgColor.Grass.composeColor))
   Grid()
   if (state.match!!.state == PLACING) PlacementLayer()
   Button(
@@ -51,9 +57,19 @@ fun MatchScreen() {
     }) {
     Text("Start ${nextState.name.lowercase(Locale.US)}", color = Color.White)
   }
-  state.match!!.entities.values
-    .filterIsInstance<BattleUnit>()
-    .forEach { spriteOf(it) }
+  //  state.match!!.entities.values
+  //    .filterIsInstance<BattleUnit>()
+  //    .forEach { spriteOf(it) }
+  var sprites by remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
+  LaunchedEffect(world) {
+    inWorld {
+      sprites = family { all(SpriteCmpnt, TransformCmpnt) }
+        .entities
+        .map<@Composable () -> Unit> { e -> @Composable { infantrySpriteOf(e) } }
+    }
+  }
+
+  sprites.forEach { it() }
   PathLayer()
 }
 
@@ -67,14 +83,14 @@ fun PlacementLayer() {
       .pointerInput(Unit) {
         detectTapGestures { offset ->
           val size = WgSize(50, 25)
-          Infantry(
+          val unit = Infantry(
             id = "",
             position = Vector(offset.x - size.width / 2, offset.y - size.height / 2),
             size = size,
             speed = 10f,
             color = state.match!!.players[state.user.id]!!.color
           )
-            .let { PlaceEntity(state.match!!.id, it) }
+          SpawnUnit(state.user.id, unit.position, CombatUnit)
             .let { GlobalScope.launch(Dispatchers.IO) { send(it) } }
         }
       }

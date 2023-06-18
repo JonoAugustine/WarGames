@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.jonoaugustine.wargames.common.JsonConfig
+import com.jonoaugustine.wargames.common.network.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.Action
 import com.jonoaugustine.wargames.common.network.missives.Event
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -42,8 +42,8 @@ import kotlin.time.Duration.Companion.seconds
 private data class Credentials(val id: String, val name: String)
 private enum class AttemptState { ATTEMPTING, WAITING, DONE, FAILED }
 
-private const val maxAttempts = 3
-private const val retryDelay = 10
+private const val maxAttempts = 10
+private const val retryDelay = 3
 private val credentials =
   Path(System.getProperty("user.dir"), ".credentials.json")
     .readText()

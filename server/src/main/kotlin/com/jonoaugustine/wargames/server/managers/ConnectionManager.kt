@@ -8,6 +8,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
 
+typealias ActionResponse = Pair<Event, Set<UserID>>
+
 data class Connection(val user: User, val session: WebSocketServerSession)
 
 val Connection.id get() = user.id
@@ -36,13 +38,18 @@ suspend fun WebSocketServerSession.onClose(uid: String) {
   // mutex.withLock { connections = connections.filterValues { it.id != uid } }
   // TODO("handle player leaving match")
 }
-typealias ActionResponse = Pair<Event, Set<UserID>>
 
 suspend fun Connection.handleAction(action: Action): ActionResponse? =
   when (action) {
     is UserAction  -> handleUserAction(action)
     is LobbyAction -> handleLobbyAction(action)
     is MatchAction -> handleMatchAction(action)
+    is WorldAction -> getMatchOf(user)
+      .let { it ?: return errorEventOf("match not found") }
+      .let { (id to action) queueTo it.id }
+      .takeIf { it.isFailure }
+      ?.also { println("failed to queue action") }
+      .let { null }
   }
 
 suspend fun Connection.handleUserAction(action: UserAction): ActionResponse =

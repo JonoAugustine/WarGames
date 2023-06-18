@@ -25,11 +25,11 @@ private val matchExecScope = CoroutineScope(threadContext)
  *
  * [MatchID] -> [Match]
  */
-private var matches: Map<String, Match> = mapOf()
-private var matchJobs: Map<MatchID, Job> = mapOf()
+private var matches: Map<String, Match> = mutableMapOf()
+private var matchJobs: Map<MatchID, Job> = mutableMapOf()
 private val mutex = Mutex()
 
-suspend fun getMatch(id: MatchID): Match? = mutex.withLock { matches[id] }
+suspend fun getMatch(id: String): Match? = mutex.withLock { matches[id] }
 suspend fun getMatchOf(user: User): Match? = getMatch(user.id)
 suspend fun Match.save() = mutex.withLock {
   matches = matches + (players.keys.map { it to this } + (id to this))
@@ -51,11 +51,13 @@ fun Match.addEntity(entity: Entity): Match? =
     }
   }?.let { this.copy(entities = this.entities + (it.id to it)) }
 
+// TODO create match should start match job
 suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse =
   when (action) {
     is CreateMatch     -> getLobbyOf(user)
       ?.let { newMatch(it) }
       ?.also { it.save() }
+      ?.also { startWorld(it) }
       ?.let { MatchCreated(it) to it.players.keys }
       ?: errorEventOf("lobby does not exist")
 
@@ -64,16 +66,17 @@ suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse =
       ?: errorEventOf("match does not exist")
   }
 
+// TODO Should add to match action Queue and return null
 // TODO Map Bounding
 private suspend fun Connection.handleLiveMatchAction(
   action: LiveMatchAction,
   match: Match
 ): ActionResponse = when (action) {
-  StartMatch       -> TODO()
   is SetMatchState -> setMatchState(match, action)
   is SetEntityPath -> setEntityPath(match, action)
   is PlaceEntity   -> placeEntity(match, action)
   is MoveEntity    -> moveEntity(match, action)
+  StartMatch       -> TODO("start match action. probably going to delete")
   is JoinMatch     -> TODO("join match in progress (probably going to delete)")
 }
 

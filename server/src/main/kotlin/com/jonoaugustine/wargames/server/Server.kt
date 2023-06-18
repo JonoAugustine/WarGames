@@ -1,7 +1,7 @@
 package com.jonoaugustine.wargames.server
 
-import com.jonoaugustine.wargames.common.JsonConfig
 import com.jonoaugustine.wargames.common.LobbyPreview
+import com.jonoaugustine.wargames.common.network.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.Action
 import com.jonoaugustine.wargames.common.network.missives.ErrorEvent
 import com.jonoaugustine.wargames.common.network.missives.UserConnected

@@ -4,11 +4,10 @@ import com.jonoaugustine.wargames.common.entities.Entity
 import com.jonoaugustine.wargames.common.entities.EntityID
 import kotlinx.serialization.Serializable
 
-typealias LobbyID = String
-typealias MatchID = String
-
 @Serializable
 data class Player(val user: User, val color: WgColor)
+
+val Player.id get() = user.id
 
 @Serializable
 data class Lobby(

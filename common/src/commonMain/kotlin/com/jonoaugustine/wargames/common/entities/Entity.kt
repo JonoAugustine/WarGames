@@ -1,6 +1,10 @@
 package com.jonoaugustine.wargames.common.entities
 
-import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.Match
+import com.jonoaugustine.wargames.common.WgSize
+import com.jonoaugustine.wargames.common.math.Rectangle
+import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.math.overlaps
 
 typealias EntityID = String
 

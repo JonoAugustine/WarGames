@@ -1,5 +1,9 @@
-package com.jonoaugustine.wargames.common
+package com.jonoaugustine.wargames.common.network
 
+import com.jonoaugustine.wargames.common.ecs.Replicated
+import com.jonoaugustine.wargames.common.ecs.components.*
+import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
+import com.jonoaugustine.wargames.common.ecs.entities.WorldUnit
 import com.jonoaugustine.wargames.common.entities.Archer
 import com.jonoaugustine.wargames.common.entities.Entity
 import com.jonoaugustine.wargames.common.entities.Infantry
@@ -28,6 +32,10 @@ val JsonConfig = Json {
       subclass(PlaceEntity::class)
       subclass(SetMatchState::class)
       subclass(SetEntityPath::class)
+      // WORLD
+      subclass(SpawnUnit::class)
+      subclass(MoveUnit::class)
+      subclass(SetUnitPath::class)
     }
     polymorphic(Event::class) {
       subclass(ErrorEvent::class)
@@ -43,12 +51,25 @@ val JsonConfig = Json {
       subclass(MatchLeft::class)
       subclass(MatchUpdated::class)
       subclass(MatchUpdated::class)
-      //subclass(MatchStarted::class)
-      //subclass(EntityPlaced::class)
+      // World
+      subclass(WorldUpdated::class)
     }
     polymorphic(Entity::class) {
       subclass(Infantry::class)
       subclass(Archer::class)
+    }
+    polymorphic(Replicated::class) {
+      subclass(OwnerCmpnt::class)
+      subclass(PlayerCmpnt::class)
+      subclass(TransformCmpnt::class)
+      subclass(CollisionCmpnt::class)
+      subclass(MovementPathCmpnt::class)
+      subclass(SpriteCmpnt::class)
+      subclass(NameCmpnt::class)
+      subclass(MapCmpnt::class)
+    }
+    polymorphic(WorldUnit::class) {
+      subclass(CombatUnit::class)
     }
   }
 }

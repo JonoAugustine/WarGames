@@ -4,10 +4,14 @@ import Eventbus
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.jonoaugustine.wargames.common.JsonConfig
+import com.github.quillraven.fleks.Component
+import com.github.quillraven.fleks.Entity
+import com.github.quillraven.fleks.World
+import com.github.quillraven.fleks.configureWorld
 import com.jonoaugustine.wargames.common.Lobby
 import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.User
+import com.jonoaugustine.wargames.common.network.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.*
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -55,6 +59,7 @@ object AppState {
   }
   var state: AppStateData by mutableStateOf(AppStateData())
     private set
+  var world: World by mutableStateOf(configureWorld { })
   var page: Page by mutableStateOf(MAIN_MENU)
     private set
 
@@ -63,6 +68,7 @@ object AppState {
       listenToUserEvents()
       listenToLobbyEvents()
       listenToMatchEvents()
+      listenToWorldEvents()
       Eventbus<ErrorEvent> { event -> println("ERROR EVENT: ${event.message}") }
     }
   }
@@ -93,6 +99,24 @@ object AppState {
     Eventbus<MatchEvent> { (match) -> update { it.copy(match = match) } }
     Eventbus<MatchCreated> { goTo(MATCH_PLAY) }
   }
+
+  context(CoroutineScope)
+  private fun listenToWorldEvents() {
+    Eventbus<WorldUpdated> { (snapshot) ->
+      @Suppress("UNCHECKED_CAST")
+      mutex.withLock {
+        world = configureWorld { }
+        world.loadSnapshot(snapshot as Map<Entity, List<Component<*>>>)
+      }
+    }
+  }
+
+  /**
+   * Run the [block] in a concurrent-safe context of the [world]
+   */
+  context(CoroutineScope)
+  suspend fun <T> inWorld(block: suspend World.() -> T): T =
+    mutex.withLock { block(world) }
 
   fun goTo(page: Page) {
     AppState.page = page

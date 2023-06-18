@@ -24,9 +24,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jonoaugustine.wargames.common.Match.State.PLACING
 import com.jonoaugustine.wargames.common.Match.State.PLANNING
-import com.jonoaugustine.wargames.common.Vector
 import com.jonoaugustine.wargames.common.entities.BattleUnit
 import com.jonoaugustine.wargames.common.entities.center
+import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.MoveEntity
 import com.jonoaugustine.wargames.common.network.missives.SetEntityPath
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -43,7 +43,7 @@ import util.dp
 context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun spriteOf(bu: BattleUnit) {
-  var movePreview: Vector by mutableStateOf(Vector())
+  var movePreview: Vector by mutableStateOf(Vector.ZERO)
 
   HoverBox(
     Modifier.offset(bu.position.x.dp, bu.position.y.dp)
@@ -73,7 +73,7 @@ fun spriteOf(bu: BattleUnit) {
 }
 
 @Composable
-private fun UnitEnsign(unit: BattleUnit, offset: Vector = Vector()) {
+private fun UnitEnsign(unit: BattleUnit, offset: Vector = Vector.ZERO) {
   Canvas(Modifier.fillMaxSize().offset(offset.x.dp, offset.y.dp)) {
     drawPath(color = Color.Black, style = Stroke(1f), path = Path().apply {
       moveTo(0f, 0f)
@@ -94,7 +94,7 @@ private suspend fun handleUnitDragging(
   detectDragGestures(
     onDragEnd = {
       GlobalScope.launch(Dispatchers.IO) { send(MoveEntity(unit.id, dragPos)) }
-      setPreviewPosition(Vector())
+      setPreviewPosition(Vector.ZERO)
     }
   ) { change, _ ->
     setPreviewPosition(

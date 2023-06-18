@@ -16,10 +16,12 @@ allprojects {
 
   repositories {
     mavenCentral()
+    mavenLocal()
   }
 
-  tasks.withType<KotlinCompile> {
+  tasks.withType<KotlinCompile>().all {
     kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
   }
 }
 

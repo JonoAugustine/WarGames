@@ -1,7 +1,12 @@
 package com.jonoaugustine.wargames.common.entities
 
-import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.Match.State.RUNNING
+import com.jonoaugustine.wargames.common.WgColor
+import com.jonoaugustine.wargames.common.WgSize
+import com.jonoaugustine.wargames.common.math.Rectangle
+import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.math.overlaps
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -66,9 +71,8 @@ data class Infantry(
   override val step: Float = 0f,
 ) : BattleUnit {
 
-  override fun copy(path: List<Vector>, step: Float, speed: Float): Infantry {
-    TODO("Not yet implemented")
-  }
+  override fun copy(path: List<Vector>, step: Float, speed: Float): Infantry =
+    this.copy(id = id, path = path, step = step, speed = speed)
 
   override fun copy() {
   }

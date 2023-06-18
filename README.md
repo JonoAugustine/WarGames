@@ -20,6 +20,26 @@ Table-top, unit-based war military maneuver game.
   - models
   - game loop
 
+## Actions Handling
+
+### Unbound Actions - Have no associated match job
+- UserAction
+  - UpdateUsername
+- LobbyAction
+  - CreateLobby
+  - CloseLobby
+  - JoinLobby
+  - LeaveLobby
+  - UpdateLobbyName
+- MatchAction
+  - CreateMatch
+
+### Bound Action - Have associated match job
+- LiveMatchAction
+  - SetMatchState
+  - PlaceEntity
+  - MoveEntity
+  - SetEntityPath
 
 ## TODO
 - unit rotation
@@ -28,3 +48,5 @@ Table-top, unit-based war military maneuver game.
 - improve collision response
 - networking
 - toasts system
+- command-runner units
+  - unit which goes from commander to the commanded BU
