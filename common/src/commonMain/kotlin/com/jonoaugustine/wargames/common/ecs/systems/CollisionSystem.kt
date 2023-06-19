@@ -2,11 +2,13 @@ package com.jonoaugustine.wargames.common.ecs.systems
 
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
+import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.World.Companion.family
 import com.jonoaugustine.wargames.common.ecs.components.Collision
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.polygonWith
+import com.jonoaugustine.wargames.common.math.Polygon
 import com.jonoaugustine.wargames.common.math.collisionWith
 
 class CollisionSystem : IteratingSystem(family { all(TransformCmpnt, CollisionCmpnt) }) {
@@ -20,7 +22,7 @@ class CollisionSystem : IteratingSystem(family { all(TransformCmpnt, CollisionCm
 
     collision.hitboxes.values.forEach { hitboxA ->
       val polygonA = hitboxA.polygonWith(origin, rotation)
-      hitboxA.collisions = emptyList()
+      hitboxA.collisions = emptyMap()
 
       others.forEach { entityB ->
         val transB = entityB[TransformCmpnt]
@@ -29,7 +31,23 @@ class CollisionSystem : IteratingSystem(family { all(TransformCmpnt, CollisionCm
           .mapValues { polygonA collisionWith it.value }
           .filterNot { it.value == null }
           .map { Collision(entityB, it.key, it.value!!) }
+          .associateBy { entityB }
       }
     }
   }
 }
+
+fun World.checkCollisions(polygonA: Polygon): Map<Entity, Collision> =
+  family { all(CollisionCmpnt, TransformCmpnt) }
+    .entities
+    .map { entity ->
+      val transB = entity[TransformCmpnt]
+      entity[CollisionCmpnt].hitboxes
+        .mapValues { it.value.polygonWith(transB.position, transB.rotation) }
+        .mapValues { polygonA collisionWith it.value }
+        .filterNot { it.value == null }
+        .map { Collision(entity, it.key, it.value!!) }
+    }
+    .flatten()
+    .associateBy { it.entity }
+

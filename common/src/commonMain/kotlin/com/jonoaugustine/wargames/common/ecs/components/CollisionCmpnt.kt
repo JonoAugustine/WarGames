@@ -30,7 +30,7 @@ data class Collision(
 data class Hitbox(
   val size: WgSize,
   val offset: Vector = Vector.ZERO,
-  var collisions: List<Collision> = emptyList()
+  var collisions: Map<Entity, Collision> = emptyMap()
 )
 
 fun Hitbox.polygonWith(origin: Vector, rotation: Float): Polygon =
@@ -44,6 +44,8 @@ data class CollisionCmpnt(
   /** Whether any hitbox has a collision */
   val colliding: Boolean get() = hitboxes.values.any { it.collisions.isNotEmpty() }
   val notColliding: Boolean get() = !colliding
+
+  fun clear() = hitboxes.forEach { it.value.collisions = emptyMap() }
 
   override fun type() = CollisionCmpnt
 

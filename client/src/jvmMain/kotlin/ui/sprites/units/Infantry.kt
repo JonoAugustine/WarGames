@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
@@ -46,26 +49,49 @@ import util.composeColor
 import util.dp
 
 context(AppState, DefaultClientWebSocketSession)
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun World.infantrySpriteOf(entity: Entity) {
-  var movePreview: Vector by mutableStateOf(Vector.ZERO)
-  val transform = entity[TransformCmpnt]
+  var dragPos by remember(entity) { mutableStateOf(entity[TransformCmpnt].position) }
+  var movePreview by remember { mutableStateOf(Vector.ZERO) }
   val sprite = entity[SpriteCmpnt]
 
   HoverBox(
-    Modifier.offset(transform.position.x.dp, transform.position.y.dp)
+    Modifier.offset(entity[TransformCmpnt].position.x.dp, entity[TransformCmpnt].position.y.dp)
       .size(sprite.size.dp)
-      .rotate(transform.rotation)
+      .rotate(entity[TransformCmpnt].rotation)
       .background(sprite.color.composeColor)
       .border(1.dp, if (entity[CollisionCmpnt].colliding) Color.Yellow else Color.Black)
-      .pointerInput(entity, state.match!!.state) {
+      .pointerInput(entity, entity[TransformCmpnt], entity[SpriteCmpnt]) {
         if (state.match!!.state == PLACING)
-          handleUnitDragging(entity.id, transform, sprite) { movePreview = it }
+          detectDragGestures(
+            onDragEnd = {
+              val dragTo = Vector(
+                movePreview.x + entity[TransformCmpnt].position.x,
+                movePreview.y + entity[TransformCmpnt].position.y
+              )
+              GlobalScope.launch(Dispatchers.IO) { send(MoveUnit(entity.id, dragTo)) }
+              movePreview = Vector.ZERO
+            }
+          ) { change, _ ->
+            movePreview = Vector(
+              change.position.x - sprite.size.width / 2,
+              change.position.y - sprite.size.height / 2
+            )
+            dragPos = Vector(
+              (change.position.x + entity[TransformCmpnt].position.x) - (sprite.size.width / 2),
+              (change.position.y + entity[TransformCmpnt].position.y) - (sprite.size.height / 2),
+            )
+          }
       }
   ) { hovering ->
-    Text(entity.id.toString())
+    Text(
+      "${entity.id} ${entity[TransformCmpnt].position}",
+      modifier = Modifier.offset(y = (sprite.size.height).dp),
+      overflow = TextOverflow.Visible,
+      fontSize = TextUnit(0.8f, TextUnitType.Em)
+    )
     UnitEnsign(sprite)
-    // TODO unit doesn't show preview on first drag
     if (movePreview.x + movePreview.y != 0f) UnitEnsign(sprite, movePreview)
 
     // Show collisions
@@ -84,7 +110,7 @@ fun World.infantrySpriteOf(entity: Entity) {
       Box(Modifier.clip(CircleShape)
         .background(Color.Black.copy(alpha = if (hovering) 0.7f else 0f))
         .size(pathSelectorSize.dp)
-        .pointerInput(entity) { recordPath(entity.id, transform, sprite) }
+        .pointerInput(entity) { recordPath(entity.id, entity[TransformCmpnt], sprite) }
         // TODO path start point offset not working
         .offset(100.dp, 100.dp)
       )
@@ -101,34 +127,6 @@ private fun UnitEnsign(sprite: SpriteCmpnt, offset: Vector = Vector()) {
       moveTo(0f, sprite.size.height.toFloat())
       lineTo(sprite.size.width.toFloat(), 0f)
     })
-  }
-}
-
-context(AppState, DefaultClientWebSocketSession, PointerInputScope)
-@OptIn(DelicateCoroutinesApi::class)
-private suspend fun handleUnitDragging(
-  eid: Int,
-  transform: TransformCmpnt,
-  sprite: SpriteCmpnt,
-  setPreviewPosition: (Vector) -> Unit,
-) {
-  var dragPos by mutableStateOf(transform.position)
-  detectDragGestures(
-    onDragEnd = {
-      GlobalScope.launch(Dispatchers.IO) { send(MoveUnit(eid, dragPos)) }
-      setPreviewPosition(Vector.ZERO)
-    }
-  ) { change, _ ->
-    setPreviewPosition(
-      Vector(
-        change.position.x - sprite.size.width / 2,
-        change.position.y - sprite.size.height / 2
-      )
-    )
-    dragPos = Vector(
-      (change.position.x + transform.position.x) - (sprite.size.width / 2),
-      (change.position.y + transform.position.y) - (sprite.size.height / 2),
-    )
   }
 }
 

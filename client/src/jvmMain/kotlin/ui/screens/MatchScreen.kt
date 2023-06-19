@@ -22,7 +22,6 @@ import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
 import com.jonoaugustine.wargames.common.entities.BattleUnit
-import com.jonoaugustine.wargames.common.entities.Infantry
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.SetMatchState
 import com.jonoaugustine.wargames.common.network.missives.SpawnUnit
@@ -57,9 +56,6 @@ fun MatchScreen() {
     }) {
     Text("Start ${nextState.name.lowercase(Locale.US)}", color = Color.White)
   }
-  //  state.match!!.entities.values
-  //    .filterIsInstance<BattleUnit>()
-  //    .forEach { spriteOf(it) }
   var sprites by remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
   LaunchedEffect(world) {
     inWorld {
@@ -83,15 +79,15 @@ fun PlacementLayer() {
       .pointerInput(Unit) {
         detectTapGestures { offset ->
           val size = WgSize(50, 25)
-          val unit = Infantry(
-            id = "",
-            position = Vector(offset.x - size.width / 2, offset.y - size.height / 2),
-            size = size,
-            speed = 10f,
-            color = state.match!!.players[state.user.id]!!.color
-          )
-          SpawnUnit(state.user.id, unit.position, CombatUnit)
-            .let { GlobalScope.launch(Dispatchers.IO) { send(it) } }
+          GlobalScope.launch(Dispatchers.IO) {
+            send(
+              SpawnUnit(
+                state.user.id,
+                Vector(offset.x - size.width / 2, offset.y - size.height / 2),
+                CombatUnit
+              )
+            )
+          }
         }
       }
   )

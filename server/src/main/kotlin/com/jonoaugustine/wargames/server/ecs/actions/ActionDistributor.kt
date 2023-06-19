@@ -2,15 +2,14 @@ package com.jonoaugustine.wargames.server.ecs.actions
 
 import com.github.quillraven.fleks.World
 import com.jonoaugustine.wargames.common.ID
-import com.jonoaugustine.wargames.common.WgSize
-import com.jonoaugustine.wargames.common.ecs.GameStateContainer
-import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.PlayerCmpnt
-import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
-import com.jonoaugustine.wargames.common.ecs.entities.addBattleUnitOf
+import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
+import com.jonoaugustine.wargames.common.ecs.systems.checkCollisions
+import com.jonoaugustine.wargames.common.math.rectangleFrom
+import com.jonoaugustine.wargames.common.math.toRotated
 import com.jonoaugustine.wargames.common.network.missives.Action
 import com.jonoaugustine.wargames.common.network.missives.MoveUnit
-import com.jonoaugustine.wargames.common.network.missives.SpawnUnit
 
 class ActionDistributor internal constructor(
   private val world: World,
@@ -50,30 +49,22 @@ fun actionDistributorOf(
   world, ActionDistributorConfiguration(world).apply(cfg).handlers.toList()
 )
 
-fun ActionDistributorConfiguration.SpawnUnitHandler() = add<SpawnUnit> { act, uid ->
-  val gs = world.inject<GameStateContainer>()
-  // TODO gamestate restrict spawning if (gs.state !== PLACING) return@add
-  val player = world.family { all(PlayerCmpnt) }
-    .entities.firstOrNull { it[PlayerCmpnt].id == uid }
-    ?: return@add
-
-  when (act.unitType) {
-    is CombatUnit -> world.addBattleUnitOf(
-      uid,
-      act.position,
-      10f,
-      WgSize(50, 25),
-      player[PlayerCmpnt].color
-    )
-  }
-}
-
 fun ActionDistributorConfiguration.MoveUnitHandler() = add<MoveUnit> { act, uid ->
   val player = world.family { all(PlayerCmpnt) }
     .entities.firstOrNull { it[PlayerCmpnt].id == uid }
     ?: return@add
-  val unit = world.asEntityBag()[act.entityID]
-  if (unit[CollisionCmpnt].colliding) {
-    TODO("handle collision movement")
-  }
+  val unit = act.entityID
+    .takeIf { it < world.numEntities }
+    ?.let { world.asEntityBag()[it] }
+    ?: return@add
+
+  val collisionPredictions =
+    rectangleFrom(act.position, unit[SpriteCmpnt].size)
+      .toRotated(act.rotation ?: unit[TransformCmpnt].rotation)
+      .let { checkCollisions(it) }
+
+  if (collisionPredictions.isNotEmpty()) return@add
+
+  unit[TransformCmpnt].position = act.position
+  act.rotation?.let { unit[TransformCmpnt].rotation = it }
 }

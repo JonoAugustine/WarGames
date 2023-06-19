@@ -1,5 +1,6 @@
 package com.jonoaugustine.wargames.common.math
 
+import com.jonoaugustine.wargames.common.WgSize
 import kotlinx.serialization.Serializable
 
 /**
@@ -47,6 +48,13 @@ data class Vector(
    * @return The result of the vector subtraction.
    */
   operator fun minus(vector: Vector): Vector = this + vector * -1f
+  operator fun minus(size: WgSize): Vector =
+    this - Vector(size.width.toFloat(), size.height.toFloat())
+
+  operator fun plus(size: WgSize): Vector =
+    this + Vector(size.width.toFloat(), size.height.toFloat())
+
+  override fun toString(): String = "($x, $y, ${magnitude}u)"
 
   /**
    * Represents a zero vector with all components set to zero.
