@@ -2,6 +2,7 @@ package com.jonoaugustine.wargames.common.math
 
 import com.jonoaugustine.wargames.common.WgSize
 import kotlinx.serialization.Serializable
+import kotlin.math.sqrt
 
 /**
  * Represents a 2D vector with x and y components and an optional magnitude.
@@ -17,43 +18,6 @@ data class Vector(
   val magnitude: Float = 0f
 ) {
 
-  /**
-   * Performs scalar multiplication on the vector.
-   *
-   * @param scale The scalar value to multiply the vector by.
-   * @return The result of the scalar multiplication.
-   */
-  operator fun times(scale: Float): Vector = Vector(this.x * scale, this.y * scale)
-
-  /**
-   * Calculates the dot product between this vector and another vector.
-   *
-   * @param vector The other vector to calculate the dot product with.
-   * @return The dot product of the two vectors.
-   */
-  operator fun times(vector: Vector): Float = this dot vector
-
-  /**
-   * Adds another vector to this vector.
-   *
-   * @param vector The vector to add.
-   * @return The result of the vector addition.
-   */
-  operator fun plus(vector: Vector): Vector = Vector(this.x + vector.x, this.y + vector.y)
-
-  /**
-   * Subtracts another vector from this vector.
-   *
-   * @param vector The vector to subtract.
-   * @return The result of the vector subtraction.
-   */
-  operator fun minus(vector: Vector): Vector = this + vector * -1f
-  operator fun minus(size: WgSize): Vector =
-    this - Vector(size.width.toFloat(), size.height.toFloat())
-
-  operator fun plus(size: WgSize): Vector =
-    this + Vector(size.width.toFloat(), size.height.toFloat())
-
   override fun toString(): String = "($x, $y, ${magnitude}u)"
 
   /**
@@ -64,6 +28,44 @@ data class Vector(
     val ZERO = Vector()
   }
 }
+
+operator fun Vector.minus(size: WgSize): Vector =
+  this - Vector(size.width.toFloat(), size.height.toFloat())
+
+/**
+ * Subtracts another vector from this vector.
+ *
+ * @param vector The vector to subtract.
+ * @return The result of the vector subtraction.
+ */
+operator fun Vector.minus(vector: Vector): Vector = this + vector * -1f
+
+operator fun Vector.plus(size: WgSize): Vector =
+  this + Vector(size.width.toFloat(), size.height.toFloat())
+
+/**
+ * Calculates the dot product between this vector and another vector.
+ *
+ * @param vector The other vector to calculate the dot product with.
+ * @return The dot product of the two vectors.
+ */
+operator fun Vector.times(vector: Vector): Float = this dot vector
+
+/**
+ * Performs scalar multiplication on the vector.
+ *
+ * @param scale The scalar value to multiply the vector by.
+ * @return The result of the scalar multiplication.
+ */
+operator fun Vector.times(scale: Float): Vector = Vector(this.x * scale, this.y * scale)
+
+/**
+ * Adds another vector to this vector.
+ *
+ * @param vector The vector to add.
+ * @return The result of the vector addition.
+ */
+operator fun Vector.plus(vector: Vector): Vector = Vector(this.x + vector.x, this.y + vector.y)
 
 /**
  * Calculates the dot (scalar) product of two vectors.
@@ -124,3 +126,7 @@ infix fun Vector.overlaps(projection2: Vector): Boolean =
  * @return `true` if the projections do not overlap, `false` otherwise.
  */
 infix fun Vector.noOverlap(projection2: Vector): Boolean = !(this overlaps projection2)
+
+/** Calculates the Euclidean distance between this vector and another vector */
+fun Vector.distanceTo(other: Vector): Float =
+  sqrt((other.x - x) * (other.x - x) + (other.y - y) * (other.y - y))

@@ -34,3 +34,6 @@ data class MoveUnit(
 @SerialName("world.unit.path")
 data class SetUnitPath(val entityID: Int, val path: List<Vector>) : WorldAction
 
+@Serializable
+@SerialName("world.unit.destination")
+data class SetUnitDestination(val entityID: Int, val destination: Vector) : WorldAction

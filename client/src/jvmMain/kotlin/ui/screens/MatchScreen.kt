@@ -1,29 +1,32 @@
 package ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.PointerMatcher.Companion.mouse
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerButton
+import androidx.compose.ui.input.pointer.PointerButton.Companion.Primary
 import androidx.compose.ui.input.pointer.pointerInput
+import com.github.quillraven.fleks.World
 import com.jonoaugustine.wargames.common.Grass
-import com.jonoaugustine.wargames.common.Match
-import com.jonoaugustine.wargames.common.Match.State.PLACING
 import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.WgSize
+import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
+import com.jonoaugustine.wargames.common.ecs.components.PathingCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
-import com.jonoaugustine.wargames.common.entities.BattleUnit
+import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.Vector
-import com.jonoaugustine.wargames.common.network.missives.SetMatchState
+import com.jonoaugustine.wargames.common.network.missives.SetUnitDestination
 import com.jonoaugustine.wargames.common.network.missives.SpawnUnit
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -36,27 +39,14 @@ import state.send
 import ui.components.Grid
 import ui.sprites.units.infantrySpriteOf
 import util.composeColor
-import java.util.*
+import util.toVector
 
 context(AppState, DefaultClientWebSocketSession)
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun MatchScreen() {
   if (state.match == null) return goTo(MAIN_MENU)
-  val nextState = Match.State.values().asList()
-    .getOrElse(state.match!!.state.ordinal + 1) { PLACING }
-  //
-  Box(Modifier.fillMaxSize().background(WgColor.Grass.composeColor))
-  Grid()
-  if (state.match!!.state == PLACING) PlacementLayer()
-  Button(
-    enabled = state.match!!.state != Match.State.RUNNING,
-    onClick = {
-      GlobalScope.launch(Dispatchers.IO) { send(SetMatchState(nextState)) }
-    }) {
-    Text("Start ${nextState.name.lowercase(Locale.US)}", color = Color.White)
-  }
   var sprites by remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
+
   LaunchedEffect(world) {
     inWorld {
       sprites = family { all(SpriteCmpnt, TransformCmpnt) }
@@ -65,19 +55,25 @@ fun MatchScreen() {
     }
   }
 
+  Box(Modifier.fillMaxSize().background(WgColor.Grass.composeColor))
+  Grid()
+
+  world.DrawPathLayer()
+  world.PathingInputLayer()
+
+  if (world.gameState?.state == PLACING) PlacementLayer()
   sprites.forEach { it() }
-  PathLayer()
 }
 
 context(AppState, DefaultClientWebSocketSession)
-@OptIn(DelicateCoroutinesApi::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun PlacementLayer() {
   Box(
     Modifier
       .fillMaxSize()
       .pointerInput(Unit) {
-        detectTapGestures { offset ->
+        detectTapGestures(mouse(Primary)) { offset ->
           val size = WgSize(50, 25)
           GlobalScope.launch(Dispatchers.IO) {
             send(
@@ -95,33 +91,33 @@ fun PlacementLayer() {
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable
-fun PathLayer() {
+fun World.DrawPathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-    state.match!!.entities.values
-      .filterIsInstance<BattleUnit>()
-      .forEach { bu ->
-        if (bu.path.size <= 1) return@forEach
+    world.family { all(PathingCmpnt) }.entities
+      .map { it[SpriteCmpnt] to it[PathingCmpnt] }
+      .forEach { (sprite, pathing) ->
+        if (pathing.path.size <= 1) return@forEach
         drawPath(
           color = Color.Blue,
           style = Stroke(3f),
           path = Path().apply {
-            bu.path.first().run { moveTo(x, y) }
-            bu.path.subList(1, bu.path.size)
+            pathing.path.first().run { moveTo(x, y) }
+            pathing.path.subList(1, pathing.path.size)
               .filterIndexed { index, _ -> index % 2 == 0 }
               .forEach { lineTo(it.x, it.y) }
-            bu.path.last().let { last ->
+            pathing.destination.let { (x, y) ->
               //draw X
-              moveTo(last.x - 10, last.y - 10)
-              lineTo(last.x + 10, last.y + 10)
-              moveTo(last.x + 10, last.y - 10)
-              lineTo(last.x - 10, last.y + 10)
+              moveTo(x - 10, y - 10)
+              lineTo(x + 10, y + 10)
+              moveTo(x + 10, y - 10)
+              lineTo(x - 10, y + 10)
               // draw outline
-              val olxRoot = last.x - bu.size.width / 2
-              val olyRoot = last.y - bu.size.height / 2
+              val olxRoot = x - sprite.size.width / 2
+              val olyRoot = y - sprite.size.height / 2
               moveTo(olxRoot, olyRoot)
-              lineTo(olxRoot + bu.size.width, olyRoot)
-              lineTo(olxRoot + bu.size.width, olyRoot + bu.size.height)
-              lineTo(olxRoot, olyRoot + bu.size.height)
+              lineTo(olxRoot + sprite.size.width, olyRoot)
+              lineTo(olxRoot + sprite.size.width, olyRoot + sprite.size.height)
+              lineTo(olxRoot, olyRoot + sprite.size.height)
               lineTo(olxRoot, olyRoot)
             }
           }
@@ -130,3 +126,18 @@ fun PathLayer() {
   })
 }
 
+context(AppState, DefaultClientWebSocketSession)
+@OptIn(ExperimentalFoundationApi::class, DelicateCoroutinesApi::class)
+@Composable
+fun World.PathingInputLayer() = Box(
+  Modifier
+    .fillMaxSize()
+    .pointerInput(selectedEntity) {
+      selectedEntity?.let {
+        detectTapGestures(mouse(PointerButton.Secondary)) { offset ->
+          GlobalScope.launch(Dispatchers.IO) {
+            send(SetUnitDestination(it.id, offset.toVector()))
+          }
+        }
+      }
+    })

@@ -1,5 +1,6 @@
 package com.jonoaugustine.wargames.common.network
 
+import com.jonoaugustine.wargames.common.ecs.GameStateCmpnt
 import com.jonoaugustine.wargames.common.ecs.Replicated
 import com.jonoaugustine.wargames.common.ecs.components.*
 import com.jonoaugustine.wargames.common.ecs.entities.CombatUnit
@@ -36,6 +37,7 @@ val JsonConfig = Json {
       subclass(SpawnUnit::class)
       subclass(MoveUnit::class)
       subclass(SetUnitPath::class)
+      subclass(SetUnitDestination::class)
     }
     polymorphic(Event::class) {
       subclass(ErrorEvent::class)
@@ -67,6 +69,8 @@ val JsonConfig = Json {
       subclass(SpriteCmpnt::class)
       subclass(NameCmpnt::class)
       subclass(MapCmpnt::class)
+      subclass(GameStateCmpnt::class)
+      subclass(PathingCmpnt::class)
     }
     polymorphic(WorldUnit::class) {
       subclass(CombatUnit::class)

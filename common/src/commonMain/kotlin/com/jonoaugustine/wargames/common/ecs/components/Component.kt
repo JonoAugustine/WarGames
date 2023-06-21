@@ -55,3 +55,12 @@ data class MapCmpnt(var background: WgColor) : Component<MapCmpnt>, Replicated {
 
   companion object : ComponentType<MapCmpnt>()
 }
+
+@Serializable
+data class PathingCmpnt(var destination: Vector, var path: List<Vector>) :
+    Component<PathingCmpnt>, Replicated {
+
+  override fun type() = PathingCmpnt
+
+  companion object : ComponentType<PathingCmpnt>()
+}

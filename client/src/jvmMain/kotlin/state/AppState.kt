@@ -22,6 +22,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import state.Page.LOBBY
@@ -60,6 +61,7 @@ object AppState {
   var state: AppStateData by mutableStateOf(AppStateData())
     private set
   var world: World by mutableStateOf(configureWorld { })
+  var selectedEntity: Entity? by mutableStateOf(null)
   var page: Page by mutableStateOf(MAIN_MENU)
     private set
 
@@ -97,16 +99,16 @@ object AppState {
   context(CoroutineScope)
   private fun listenToMatchEvents() {
     Eventbus<MatchEvent> { (match) -> update { it.copy(match = match) } }
-    Eventbus<MatchCreated> { goTo(MATCH_PLAY) }
   }
 
   context(CoroutineScope)
   private fun listenToWorldEvents() {
     Eventbus<WorldUpdated> { (snapshot) ->
+      goTo(MATCH_PLAY)
       @Suppress("UNCHECKED_CAST")
-      mutex.withLock {
+      runBlocking {
         world = configureWorld { }
-        world.loadSnapshot(snapshot as Map<Entity, List<Component<*>>>)
+          .apply { loadSnapshot(snapshot as Map<Entity, List<Component<*>>>) }
       }
     }
   }
@@ -119,6 +121,6 @@ object AppState {
     mutex.withLock { block(world) }
 
   fun goTo(page: Page) {
-    AppState.page = page
+    if (page !== AppState.page) AppState.page = page
   }
 }

@@ -37,9 +37,10 @@ class CollisionSystem : IteratingSystem(family { all(TransformCmpnt, CollisionCm
   }
 }
 
-fun World.checkCollisions(polygonA: Polygon): Map<Entity, Collision> =
+fun World.checkCollisions(polygonA: Polygon, vararg ignore: Int = intArrayOf()): Map<Entity, Collision> =
   family { all(CollisionCmpnt, TransformCmpnt) }
     .entities
+    .filterNot { ignore.contains(it.id) }
     .map { entity ->
       val transB = entity[TransformCmpnt]
       entity[CollisionCmpnt].hitboxes

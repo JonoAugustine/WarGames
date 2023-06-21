@@ -17,12 +17,12 @@ fun Grid() {
   Canvas(Modifier.fillMaxSize()) {
     drawPath(color = Color.Black, style = Stroke(0.5f), path = Path().apply {
       // latitude
-      for (y in 0..windowSize.height.toInt() step 100) {
+      for (y in 0..2000 step 100) {
         moveTo(0f, y.toFloat())
         lineTo(windowSize.width, y.toFloat())
       }
       // longitude
-      for (x in 0..windowSize.width.toInt() step 100) {
+      for (x in 0..2000 step 100) {
         moveTo(x.toFloat(), 0f)
         lineTo(x.toFloat(), windowSize.height)
       }

@@ -1,9 +1,8 @@
 package ui.sprites.units
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -20,6 +19,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,12 +28,13 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
-import com.jonoaugustine.wargames.common.Match.State.PLACING
 import com.jonoaugustine.wargames.common.Match.State.PLANNING
+import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.centeredOn
+import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.MoveUnit
 import com.jonoaugustine.wargames.common.network.missives.SetUnitPath
@@ -49,21 +50,39 @@ import util.composeColor
 import util.dp
 
 context(AppState, DefaultClientWebSocketSession)
-@OptIn(DelicateCoroutinesApi::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun World.infantrySpriteOf(entity: Entity) {
   var dragPos by remember(entity) { mutableStateOf(entity[TransformCmpnt].position) }
   var movePreview by remember { mutableStateOf(Vector.ZERO) }
   val sprite = entity[SpriteCmpnt]
+  val interactionSource = remember { MutableInteractionSource() }
 
   HoverBox(
-    Modifier.offset(entity[TransformCmpnt].position.x.dp, entity[TransformCmpnt].position.y.dp)
+    Modifier.offset(
+      entity[TransformCmpnt].position.x.dp,
+      entity[TransformCmpnt].position.y.dp
+    )
       .size(sprite.size.dp)
       .rotate(entity[TransformCmpnt].rotation)
       .background(sprite.color.composeColor)
-      .border(1.dp, if (entity[CollisionCmpnt].colliding) Color.Yellow else Color.Black)
+      .border(1.dp,
+        if (selectedEntity == entity) Color.White
+        else if (entity[CollisionCmpnt].colliding) Color.Yellow
+        else Color.Black)
+      .onClick(
+        matcher = PointerMatcher.mouse(PointerButton.Primary),
+        interactionSource = interactionSource,
+        onClick = { selectedEntity = entity }
+      )
+      .onClick(
+        matcher = PointerMatcher.mouse(PointerButton.Secondary),
+        interactionSource = interactionSource
+      ) {
+        println("Right Click")
+      }
       .pointerInput(entity, entity[TransformCmpnt], entity[SpriteCmpnt]) {
-        if (state.match!!.state == PLACING)
+        if (world.gameState?.state == PLACING)
           detectDragGestures(
             onDragEnd = {
               val dragTo = Vector(

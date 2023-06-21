@@ -3,19 +3,16 @@ package com.jonoaugustine.wargames.server.managers
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.configureWorld
 import com.jonoaugustine.wargames.common.*
-import com.jonoaugustine.wargames.common.ecs.GameState.STARTING
-import com.jonoaugustine.wargames.common.ecs.GameStateContainer
+import com.jonoaugustine.wargames.common.ecs.*
 import com.jonoaugustine.wargames.common.ecs.components.MapCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.PlayerCmpnt
-import com.jonoaugustine.wargames.common.ecs.notDone
+import com.jonoaugustine.wargames.common.ecs.entities.addBattleUnitOf
 import com.jonoaugustine.wargames.common.ecs.systems.CollisionSystem
-import com.jonoaugustine.wargames.common.ecs.updateInterval
+import com.jonoaugustine.wargames.common.ecs.systems.PathingSystem
+import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.Action
 import com.jonoaugustine.wargames.server.ecs.ServerReplicationSystem
-import com.jonoaugustine.wargames.server.ecs.actions.ActionDistributor
-import com.jonoaugustine.wargames.server.ecs.actions.MoveUnitHandler
-import com.jonoaugustine.wargames.server.ecs.actions.SpawnUnitHandler
-import com.jonoaugustine.wargames.server.ecs.actions.actionDistributorOf
+import com.jonoaugustine.wargames.server.ecs.actions.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -50,28 +47,39 @@ suspend fun killWorld(id: MatchID): Job? = mutex.withLock {
 
 suspend fun getWorld(id: MatchID): World? = mutex.withLock { worlds[id] }
 
-suspend fun startWorld(match: Match): Unit = serverWorld(match.id)
-  .apply {
-    entity { it += MapCmpnt(WgColor.Grass) }
-    match.players.values
-      .forEach { p -> entity { it += PlayerCmpnt(p.id, p.user.name, p.color) } }
-  }
-  .also { mutex.withLock { worlds += match.id to it } }
-  .also { registerActionDistributor(match.id, it) }
-  .let { launchWorldLoop(match.id, it) }
-  .let { mutex.withLock { worldJobs += match.id to it } }
+suspend fun startWorld(match: Match): Unit =
+  serverWorld(match)
+    .apply { entity { it += MapCmpnt(WgColor.Grass) } }
+    .apply { gameStateContainer(GameState.PLANNING, match.mapSize) }
+    // TODO remove test unit
+    .apply {
+      addBattleUnitOf(
+        match.players.values.first().id,
+        Vector(100f, 100f),
+        10f,
+        WgSize(25, 50),
+        WgColor.Red
+      )
+    }
+    .also { mutex.withLock { worlds += match.id to it } }
+    .also { registerActionDistributor(match.id, it) }
+    .apply {
+      match.players.values
+        .forEach { p -> entity { it += PlayerCmpnt(p.id, p.user.name, p.color) } }
+    }
+    .let { launchWorldLoop(match.id, it) }
+    .let { mutex.withLock { worldJobs += match.id to it } }
 
-fun serverWorld(mid: MatchID): World =
+fun serverWorld(match: Match): World =
   configureWorld(1000) {
     injectables {
       add(worldScope)
-      add<MatchID>(mid)
-      add(GameStateContainer(STARTING))
+      add<MatchID>(match.id)
     }
     systems {
       add(ServerReplicationSystem())
       add(CollisionSystem())
-      //add(CollisionBounceSystem())
+      add(PathingSystem())
     }
   }
 
@@ -79,14 +87,19 @@ suspend fun registerActionDistributor(mid: MatchID, world: World): Unit =
   actionDistributorOf(world) {
     SpawnUnitHandler()
     MoveUnitHandler()
+    UnitDestinationHandler()
   }
     .let { mutex.withLock { actionDistributorMap += mid to it } }
 
 suspend fun launchWorldLoop(mid: MatchID, world: World) = worldScope.launch {
-  while (world.inject<GameStateContainer>().notDone) {
-    useDistributor(mid) { it.distribute() }
-    world.update(updateInterval.toFloat())
-    delay(updateInterval.seconds)
+  println("Starting World: $mid")
+  with(world) {
+    while (gameState!!.notDone) {
+      useDistributor(mid) { it.distribute() }
+      world.update(updateInterval.toFloat())
+      delay(updateInterval.seconds)
+    }
   }
+  println("Disposing World: $mid")
   world.dispose()
 }
