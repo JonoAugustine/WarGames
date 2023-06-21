@@ -134,3 +134,24 @@ fun Polygon.toRotated(degrees: Float): Polygon {
     .mapIndexed { col, x -> Vector(x, result.last()[col]) }
     .toTypedArray()
 }
+
+fun Polygon.contains(vector: Vector): Boolean {
+  var isInPolygon = false
+  val polygonSize = this.size
+
+  var j = polygonSize - 1
+  for (i in 0 until polygonSize) {
+    if (
+      (this[i].y < vector.y && this[j].y >= vector.y ||
+          this[j].y < vector.y && this[i].y >= vector.y) &&
+      (this[i].x <= vector.x || this[j].x <= vector.x)
+    ) {
+      if (this[i].x + (vector.y - this[i].y) / (this[j].y - this[i].y) * (this[j].x - this[i].x) < vector.x) {
+        isInPolygon = !isInPolygon
+      }
+    }
+    j = i
+  }
+
+  return isInPolygon
+}

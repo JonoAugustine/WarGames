@@ -3,6 +3,7 @@ package com.jonoaugustine.wargames.common.ecs.systems
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
+import com.jonoaugustine.wargames.common.WgSize
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.PathingCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
@@ -10,7 +11,9 @@ import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.*
 import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.min
 import java.util.*
+import kotlin.math.abs
 
 class PathingSystem : IteratingSystem(family { all(PathingCmpnt) }) {
 
@@ -31,6 +34,7 @@ class PathingSystem : IteratingSystem(family { all(PathingCmpnt) }) {
     val aStarPath = findShortestPath(
       entity[TransformCmpnt].position,
       entity[PathingCmpnt].destination,
+      entity[SpriteCmpnt].size.min / 2,
       obstacles,
       0f..worldSize.width.toFloat(),
       0f..worldSize.height.toFloat()
@@ -70,6 +74,7 @@ val Node.fScore: Float get() = gScore + hScore
 fun findShortestPath(
   start: Vector,
   goal: Vector,
+  margin: Int,
   obstacles: Set<Vector>,
   xBound: ClosedFloatingPointRange<Float>,
   yBound: ClosedFloatingPointRange<Float>,
@@ -77,6 +82,7 @@ fun findShortestPath(
   // Create the start and goal nodes
   val startNode = Node(start)
   val goalNode = Node(goal)
+  val marginGoal = rectangleFrom(goal, WgSize(margin, margin))
 
   /** Unevaluated nodes */
   val openQueue = PriorityQueue<Node>(compareBy { it.fScore })
@@ -98,11 +104,13 @@ fun findShortestPath(
 
     // If the current node is the goal node
     // reconstruct the path and return it
-    if (current.position == goalNode.position)
-      return reconstructPath(current)
+    if (
+      current.position == goalNode.position ||
+      marginGoal.contains(current.position)
+    ) return reconstructPath(current)
 
     // Generate the neighbor nodes
-    generateNeighbors(current, obstacles, xBound, yBound)
+    generateNeighbors(current, margin, obstacles, xBound, yBound)
       // Skip already evaluated nodes
       .filterNot { it in visited }
       .forEach { nbr ->
@@ -135,11 +143,17 @@ fun findShortestPath(
  */
 fun generateNeighbors(
   node: Node,
+  margin: Int,
   obstacles: Set<Vector>,
   xRange: ClosedFloatingPointRange<Float>,
   yRange: ClosedFloatingPointRange<Float>,
 ): List<Node> =
-  listOf(-1f to 0f, 1f to 0f, 0f to -1f, 0f to 1f)
+  listOf(
+    -abs(margin - 1f) to 0f,
+    abs(margin - 1f) to 0f,
+    0f to -abs(margin - 1f),
+    0f to abs(margin - 1f)
+  )
     .map { Vector(node.position.x + it.first, node.position.y + it.second) }
     // Check if the neighbor position is valid and not blocked by an obstacle
     .filter { isValidPosition(it, xRange, yRange) && !obstacles.contains(it) }

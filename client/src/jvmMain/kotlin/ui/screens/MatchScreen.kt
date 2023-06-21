@@ -94,15 +94,16 @@ context(AppState, DefaultClientWebSocketSession)
 fun World.DrawPathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
     world.family { all(PathingCmpnt) }.entities
-      .map { it[SpriteCmpnt] to it[PathingCmpnt] }
-      .forEach { (sprite, pathing) ->
-        if (pathing.path.size <= 1) return@forEach
+      .map { it[PathingCmpnt] }
+      .filterNot { it.path == null }
+      .forEach { pathing ->
+        if (pathing.path!!.size <= 1) return@forEach
         drawPath(
           color = Color.Blue,
           style = Stroke(3f),
           path = Path().apply {
-            pathing.path.first().run { moveTo(x, y) }
-            pathing.path.subList(1, pathing.path.size)
+            pathing.path!!.first().run { moveTo(x, y) }
+            pathing.path!!.subList(1, pathing.path!!.size)
               .filterIndexed { index, _ -> index % 2 == 0 }
               .forEach { lineTo(it.x, it.y) }
             pathing.destination.let { (x, y) ->
@@ -111,14 +112,6 @@ fun World.DrawPathLayer() {
               lineTo(x + 10, y + 10)
               moveTo(x + 10, y - 10)
               lineTo(x - 10, y + 10)
-              // draw outline
-              val olxRoot = x - sprite.size.width / 2
-              val olyRoot = y - sprite.size.height / 2
-              moveTo(olxRoot, olyRoot)
-              lineTo(olxRoot + sprite.size.width, olyRoot)
-              lineTo(olxRoot + sprite.size.width, olyRoot + sprite.size.height)
-              lineTo(olxRoot, olyRoot + sprite.size.height)
-              lineTo(olxRoot, olyRoot)
             }
           }
         )

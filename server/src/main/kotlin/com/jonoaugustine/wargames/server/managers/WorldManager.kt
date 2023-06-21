@@ -16,6 +16,8 @@ import com.jonoaugustine.wargames.server.ecs.actions.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -95,9 +97,13 @@ suspend fun launchWorldLoop(mid: MatchID, world: World) = worldScope.launch {
   println("Starting World: $mid")
   with(world) {
     while (gameState!!.notDone) {
+      val startTime = System.currentTimeMillis()
       useDistributor(mid) { it.distribute() }
       world.update(updateInterval.toFloat())
-      delay(updateInterval.seconds)
+      val execTime = System.currentTimeMillis() - startTime
+      val delay = (updateInterval.seconds - execTime.milliseconds).inWholeMilliseconds
+      if (delay < 0) println("too long $delay")
+      delay(max(0, delay))
     }
   }
   println("Disposing World: $mid")

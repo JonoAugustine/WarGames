@@ -57,7 +57,7 @@ data class MapCmpnt(var background: WgColor) : Component<MapCmpnt>, Replicated {
 }
 
 @Serializable
-data class PathingCmpnt(var destination: Vector, var path: List<Vector>) :
+data class PathingCmpnt(var destination: Vector, var path: List<Vector>? = null) :
     Component<PathingCmpnt>, Replicated {
 
   override fun type() = PathingCmpnt

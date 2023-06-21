@@ -80,7 +80,5 @@ fun ActionDistributorConfiguration.UnitDestinationHandler() =
 
     if (unit[OwnerCmpnt].ownerID != uid) return@add
 
-    unit.configure {
-      it += PathingCmpnt(dest, emptyList())
-    }
+    unit.configure { it += PathingCmpnt(dest) }
   }
