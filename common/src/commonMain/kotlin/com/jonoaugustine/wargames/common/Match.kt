@@ -33,7 +33,7 @@ data class Match(
   val players: Map<UserID, Player> = emptyMap(),
   val entities: Map<EntityID, Entity> = emptyMap(),
   val background: WgColor = WgColor.Grass,
-  val mapSize: WgSize = WgSize(200, 200)
+  val mapSize: WgSize = WgSize(800, 800)
 ) {
 
   enum class State {

@@ -55,9 +55,9 @@ suspend fun startWorld(match: Match): Unit =
     .apply {
       addBattleUnitOf(
         match.players.values.first().id,
-        Vector(100f, 100f),
+        Vector(10f, 10f),
         10f,
-        WgSize(25, 50),
+        WgSize(25, 25),
         WgColor.Red
       )
     }

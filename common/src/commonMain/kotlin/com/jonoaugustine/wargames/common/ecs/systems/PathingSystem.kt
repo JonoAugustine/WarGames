@@ -51,7 +51,10 @@ data class Node(
   var parent: Node? = null,
   var gScore: Float = 0f,
   var hScore: Float = 0f
-)
+) {
+
+  override fun equals(other: Any?): Boolean = other is Node && other.position == position
+}
 
 /** The total cost of this node (gScore + hScore) */
 val Node.fScore: Float get() = gScore + hScore
@@ -97,19 +100,18 @@ fun findShortestPath(
       // Skip already evaluated nodes
       .filterNot { it in closedSet }
 
-    for (neighbor in neighbors) {
+    for (nbr in neighbors) {
       val tentativeGScore =
-        current.gScore + current.position.distanceTo(neighbor.position)
+        current.gScore + current.position.distanceTo(nbr.position)
 
-      if (neighbor !in openSet || tentativeGScore < neighbor.gScore) {
+      if (nbr !in openSet || tentativeGScore < nbr.gScore) {
         // Update the neighbor node with the new gScore and hScore
-        neighbor.parent = current
-        neighbor.gScore = tentativeGScore
-        neighbor.hScore = neighbor.position.distanceTo(goalNode.position)
+        nbr.gScore = tentativeGScore
+        nbr.hScore = nbr.position.distanceTo(goalNode.position)
 
-        if (neighbor !in openSet) {
+        if (nbr !in openSet) {
           // Add the neighbor node to the open set
-          openSet.add(neighbor)
+          openSet.add(nbr)
         }
       }
     }
@@ -132,8 +134,7 @@ fun generateNeighbors(
   yRange: ClosedFloatingPointRange<Float>,
 ): List<Node> =
   listOf(-1f to 0f, 1f to 0f, 0f to -1f, 0f to 1f)
-    .map { Vector(it.first, it.second) }
-    .map { node.position + it }
+    .map { Vector(node.position.x + it.first, node.position.y + it.second) }
     // Check if the neighbor position is valid and not blocked by an obstacle
     .filter { isValidPosition(it, xRange, yRange) && !obstacles.contains(it) }
     .map { Node(it, node) }
