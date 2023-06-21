@@ -54,6 +54,7 @@ data class Node(
 ) {
 
   override fun equals(other: Any?): Boolean = other is Node && other.position == position
+  override fun hashCode(): Int = (1000 * (position.x + position.y)).toInt()
 }
 
 /** The total cost of this node (gScore + hScore) */
@@ -70,51 +71,56 @@ fun findShortestPath(
   start: Vector,
   goal: Vector,
   obstacles: Set<Vector>,
-  xBound: ClosedFloatingPointRange<Float> = 0f..500f,
-  yBound: ClosedFloatingPointRange<Float> = 0f..500f,
+  xBound: ClosedFloatingPointRange<Float>,
+  yBound: ClosedFloatingPointRange<Float>,
 ): List<Vector> {
   // Create the start and goal nodes
   val startNode = Node(start)
   val goalNode = Node(goal)
 
-  // Create the open and closed sets
-  val openSet = PriorityQueue<Node>(compareBy { it.fScore })
-  val closedSet = mutableSetOf<Node>()
+  /** Unevaluated nodes */
+  val openQueue = PriorityQueue<Node>(compareBy { it.fScore })
+
+  /** Unevaluated nodes */
+  val openSet = mutableSetOf<Node>()
+  val visited = mutableSetOf<Node>()
 
   // Add the start node to the open set
-  openSet.add(startNode)
+  openQueue.add(startNode)
 
-  while (openSet.isNotEmpty()) {
+  while (openQueue.isNotEmpty()) {
     // Find the node with the lowest fScore in the open set
-    val current = openSet.poll() ?: break
+    val current = openQueue.poll() ?: break
+    openSet.remove(current)
 
     // Move the current node from the open set to the closed set
-    closedSet.add(current)
+    visited.add(current)
 
-    // If the current node is the goal node, reconstruct the path and return it
+    // If the current node is the goal node
+    // reconstruct the path and return it
     if (current.position == goalNode.position)
       return reconstructPath(current)
 
     // Generate the neighbor nodes
-    val neighbors = generateNeighbors(current, obstacles, xBound, yBound)
+    generateNeighbors(current, obstacles, xBound, yBound)
       // Skip already evaluated nodes
-      .filterNot { it in closedSet }
+      .filterNot { it in visited }
+      .forEach { nbr ->
+        val tentativeGScore =
+          current.gScore + current.position.distanceTo(nbr.position)
 
-    for (nbr in neighbors) {
-      val tentativeGScore =
-        current.gScore + current.position.distanceTo(nbr.position)
+        if (nbr !in openQueue || tentativeGScore < nbr.gScore) {
+          // Update the neighbor node with the new gScore and hScore
+          nbr.gScore = tentativeGScore
+          nbr.hScore = nbr.position.distanceTo(goalNode.position)
 
-      if (nbr !in openSet || tentativeGScore < nbr.gScore) {
-        // Update the neighbor node with the new gScore and hScore
-        nbr.gScore = tentativeGScore
-        nbr.hScore = nbr.position.distanceTo(goalNode.position)
-
-        if (nbr !in openSet) {
           // Add the neighbor node to the open set
-          openSet.add(nbr)
+          if (nbr !in openSet) {
+            openQueue.add(nbr)
+            openSet.add(nbr)
+          }
         }
       }
-    }
   }
 
   // No path found, return an empty list
