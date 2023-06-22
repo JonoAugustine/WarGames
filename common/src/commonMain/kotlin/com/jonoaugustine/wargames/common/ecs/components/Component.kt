@@ -56,9 +56,15 @@ data class MapCmpnt(var background: WgColor) : Component<MapCmpnt>, Replicated {
   companion object : ComponentType<MapCmpnt>()
 }
 
+/**
+ * @property recalc whether the path needs to be recalculated
+ */
 @Serializable
-data class PathingCmpnt(var destination: Vector, var path: List<Vector>? = null) :
-    Component<PathingCmpnt>, Replicated {
+data class PathingCmpnt(
+  var destination: Vector,
+  var path: List<Vector>? = null,
+  var recalc: Boolean = true,
+) : Component<PathingCmpnt>, Replicated {
 
   override fun type() = PathingCmpnt
 

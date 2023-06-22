@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(DelicateCoroutinesApi::class)
-private val threadContext = newSingleThreadContext("world.loops")
+private val threadContext = newFixedThreadPoolContext(4, "world.loops")
 private val worldScope = CoroutineScope(threadContext)
 private var worlds = mapOf<MatchID, World>()
 private var worldJobs = mapOf<MatchID, Job>()
@@ -55,27 +55,15 @@ suspend fun startWorld(match: Match): Unit =
     .apply { gameStateContainer(GameState.PLANNING, match.mapSize) }
     // TODO remove test unit
     .apply {
-      addBattleUnitOf(
-        match.players.values.first().id,
-        Vector(10f, 10f),
-        10f,
-        WgSize(25, 25),
-        WgColor.Red
-      )
-      addBattleUnitOf(
-        match.players.values.first().id,
-        Vector(100f, 10f),
-        10f,
-        WgSize(25, 50),
-        WgColor.Red
-      )
-      addBattleUnitOf(
-        match.players.values.first().id,
-        Vector(10f, 100f),
-        10f,
-        WgSize(25, 25),
-        WgColor.Red
-      )
+      for (i in 10 until match.mapSize.width step 70) {
+        addBattleUnitOf(
+          match.players.values.first().id,
+          Vector(i.toFloat(), i.toFloat()),
+          10f,
+          WgSize(25, 25),
+          WgColor.Red
+        )
+      }
     }
     .also { mutex.withLock { worlds += match.id to it } }
     .also { registerActionDistributor(match.id, it) }

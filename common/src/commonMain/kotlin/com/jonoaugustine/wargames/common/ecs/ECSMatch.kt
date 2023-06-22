@@ -5,7 +5,7 @@ import com.jonoaugustine.wargames.common.Player
 import com.jonoaugustine.wargames.common.UserID
 import kotlinx.serialization.Serializable
 
-const val updateInterval = 1 / 60.0
+const val updateInterval = 1 / 40.0
 
 @Serializable
 data class EcsMatch(

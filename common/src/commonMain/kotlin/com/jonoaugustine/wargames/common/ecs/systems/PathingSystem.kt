@@ -2,10 +2,11 @@ package com.jonoaugustine.wargames.common.ecs.systems
 
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.Fixed
-import com.github.quillraven.fleks.IteratingSystem
-import com.github.quillraven.fleks.World.Companion.family
+import com.github.quillraven.fleks.IntervalSystem
+import com.github.quillraven.fleks.World.Companion.inject
 import com.jonoaugustine.wargames.common.WgSize
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.BODY
 import com.jonoaugustine.wargames.common.ecs.components.PathingCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
@@ -13,28 +14,18 @@ import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.*
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.max
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.math.abs
 
-class PathingSystem :
-    IteratingSystem(family { all(PathingCmpnt) }, interval = Fixed(0.2f)) {
+class PathingSystem : IntervalSystem(Fixed(0.2f)) {
 
+  private val scope = inject<CoroutineScope>()
 
-
-  // TODO do this with coroutines for each entity
-  override fun onTickEntity(entity: Entity) {
-    val worldSize = world.gameState!!.mapSize
-    val obstacles = world.family { all(CollisionCmpnt, SpriteCmpnt, TransformCmpnt) }
-      .entities
-      .filterNot { it == entity }
-      .associate { it[TransformCmpnt] to it[CollisionCmpnt].hitboxes.values }
-      .map { (tfc, hbs) ->
-        hbs.map { rectangleFrom(tfc.position, it.size).toRotated(tfc.rotation) }
-      }
-      .flatten()
-      .let { generateObstacles(it) }
-      .toSet()
-
+  private fun onTickEntity(entity: Entity, obstacles: List<Vector>) {
     val pathing = entity[PathingCmpnt]
     val sprite = entity[SpriteCmpnt]
 
@@ -47,10 +38,31 @@ class PathingSystem :
       pathing.destination,
       factor,
       obstacles,
-      0f..worldSize.width.toFloat(),
-      0f..worldSize.height.toFloat()
+      0f..world.gameState!!.mapSize.width.toFloat(),
+      0f..world.gameState!!.mapSize.height.toFloat()
     )
     entity[PathingCmpnt].path = aStarPath
+    entity[PathingCmpnt].recalc = false
+  }
+
+  override fun onTick() {
+    // generate obstacles
+    val obstacles = world.family { all(CollisionCmpnt, SpriteCmpnt, TransformCmpnt) }
+      .entities
+      .associate { e ->
+        val (pos, rotation) = e[TransformCmpnt]
+        val hitboxes = e[CollisionCmpnt].hitboxes.filterKeys { it == BODY }.values
+        e to generateObstacles(
+          hitboxes.map { rectangleFrom(pos + it.offset, it.size).toRotated(rotation) }
+        )
+      }
+
+    // calc paths
+    val jobs = world.family { all(PathingCmpnt) }.entities
+      .filter { it[PathingCmpnt].recalc }
+      .map { scope.launch { onTickEntity(it, (obstacles - it).values.flatten()) } }
+
+    runBlocking { jobs.joinAll() }
   }
 }
 
@@ -86,7 +98,7 @@ fun findShortestPath(
   start: Vector,
   goal: Vector,
   margin: Int,
-  obstacles: Set<Vector>,
+  obstacles: Collection<Vector>,
   xBound: ClosedFloatingPointRange<Float>,
   yBound: ClosedFloatingPointRange<Float>,
 ): List<Vector> {
@@ -155,7 +167,7 @@ fun findShortestPath(
 fun generateNeighbors(
   node: Node,
   margin: Int,
-  obstacles: Set<Vector>,
+  obstacles: Collection<Vector>,
   xRange: ClosedFloatingPointRange<Float>,
   yRange: ClosedFloatingPointRange<Float>,
 ): List<Node> =
