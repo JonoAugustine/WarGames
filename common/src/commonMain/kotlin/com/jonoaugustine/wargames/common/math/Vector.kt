@@ -18,6 +18,8 @@ data class Vector(
   val magnitude: Float = 0f
 ) {
 
+  constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())
+
   override fun toString(): String = "($x, $y, ${magnitude}u)"
 
   /**
@@ -65,7 +67,8 @@ operator fun Vector.times(scale: Float): Vector = Vector(this.x * scale, this.y 
  * @param vector The vector to add.
  * @return The result of the vector addition.
  */
-operator fun Vector.plus(vector: Vector): Vector = Vector(this.x + vector.x, this.y + vector.y)
+operator fun Vector.plus(vector: Vector): Vector =
+  Vector(this.x + vector.x, this.y + vector.y)
 
 /**
  * Calculates the dot (scalar) product of two vectors.

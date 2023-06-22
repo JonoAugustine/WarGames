@@ -62,6 +62,20 @@ suspend fun startWorld(match: Match): Unit =
         WgSize(25, 25),
         WgColor.Red
       )
+      addBattleUnitOf(
+        match.players.values.first().id,
+        Vector(100f, 10f),
+        10f,
+        WgSize(25, 50),
+        WgColor.Red
+      )
+      addBattleUnitOf(
+        match.players.values.first().id,
+        Vector(10f, 100f),
+        10f,
+        WgSize(25, 25),
+        WgColor.Red
+      )
     }
     .also { mutex.withLock { worlds += match.id to it } }
     .also { registerActionDistributor(match.id, it) }

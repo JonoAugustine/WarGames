@@ -1,6 +1,7 @@
 package com.jonoaugustine.wargames.common.ecs.systems
 
 import com.github.quillraven.fleks.Entity
+import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
 import com.jonoaugustine.wargames.common.WgSize
@@ -11,11 +12,14 @@ import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.*
 import com.jonoaugustine.wargames.common.math.Vector
-import com.jonoaugustine.wargames.common.min
+import com.jonoaugustine.wargames.common.max
 import java.util.*
 import kotlin.math.abs
 
-class PathingSystem : IteratingSystem(family { all(PathingCmpnt) }) {
+class PathingSystem :
+    IteratingSystem(family { all(PathingCmpnt) }, interval = Fixed(0.2f)) {
+
+
 
   // TODO do this with coroutines for each entity
   override fun onTickEntity(entity: Entity) {
@@ -31,10 +35,17 @@ class PathingSystem : IteratingSystem(family { all(PathingCmpnt) }) {
       .let { generateObstacles(it) }
       .toSet()
 
+    val pathing = entity[PathingCmpnt]
+    val sprite = entity[SpriteCmpnt]
+
+    val factor = pathing.path?.size
+      ?.let { if (it > sprite.size.max) 15 else 10 }
+      ?: 20
+
     val aStarPath = findShortestPath(
       entity[TransformCmpnt].position,
-      entity[PathingCmpnt].destination,
-      entity[SpriteCmpnt].size.min / 2,
+      pathing.destination,
+      factor,
       obstacles,
       0f..worldSize.width.toFloat(),
       0f..worldSize.height.toFloat()
