@@ -3,10 +3,8 @@ package ui.sprites.units
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.IntrinsicSize.Max
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -33,7 +31,7 @@ import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.centeredOn
+import com.jonoaugustine.wargames.common.ecs.components.centerOn
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.MoveUnit
@@ -106,7 +104,7 @@ fun World.infantrySpriteOf(entity: Entity) {
   ) { hovering ->
     Text(
       "${entity.id} ${entity[TransformCmpnt].position}",
-      modifier = Modifier.offset(y = (sprite.size.height).dp),
+      modifier = Modifier.offset(y = (sprite.size.height).dp).requiredWidth(Max),
       overflow = TextOverflow.Visible,
       fontSize = TextUnit(0.8f, TextUnitType.Em)
     )
@@ -158,7 +156,7 @@ private suspend fun recordPath(
 ) {
   var path by mutableStateOf(listOf<Vector>())
   var initialOffset = Offset(0f, 0f)
-  val center = transform centeredOn sprite
+  val center = transform.position centerOn sprite.size
   detectDragGestures(
     onDragStart = { offset ->
       initialOffset = offset

@@ -48,7 +48,12 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
   when (action) {
     CreateLobby        -> getLobbyOf(user)
       ?.let { LobbyJoined(it.players[id]!!, it) to setOf(id) }
-      ?: newLobby(Player(user, WgColor.Red))
+      ?: newLobby(
+        Player(
+          user,
+          WgColor.Red
+        )
+      )
         .also { it.save() }
         .let { LobbyCreated(it) to setOf(id) }
 
@@ -57,7 +62,12 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
         ?.also { lobby ->
           lobby.players[id]?.also { return LobbyJoined(it, lobby) to setOf(id) }
         }
-        ?.let { it to Player(user, WgColor.Blue) }
+        ?.let {
+          it to Player(
+            user,
+            WgColor.Blue
+          )
+        }
         ?.let { (lobby, player) -> lobby.addPlayer(player) to player }
         ?.also { (lobby) -> lobby.save() }
         ?.let { (lobby, player) -> LobbyJoined(player, lobby) to lobby.players.keys }

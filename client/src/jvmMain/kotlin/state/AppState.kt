@@ -8,8 +8,6 @@ import com.github.quillraven.fleks.Component
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.configureWorld
-import com.jonoaugustine.wargames.common.Lobby
-import com.jonoaugustine.wargames.common.Match
 import com.jonoaugustine.wargames.common.User
 import com.jonoaugustine.wargames.common.network.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.*
@@ -38,8 +36,8 @@ enum class Page {
 
 data class AppStateData(
   val user: User = User("local", System.getProperty("os.name") ?: "LocalUser"),
-  val lobby: Lobby? = null,
-  val match: Match? = null,
+  val lobby: com.jonoaugustine.wargames.common.Lobby? = null,
+  val match: com.jonoaugustine.wargames.common.Match? = null,
 )
 
 @OptIn(DelicateCoroutinesApi::class)

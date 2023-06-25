@@ -36,9 +36,10 @@ suspend fun Match.save() = mutex.withLock {
 }
 
 /** Creates a new [Match] using an existing [Lobby] */
-fun newMatch(lobby: Lobby): Match = Match(
-  id = UUID.randomUUID().toString(), lobbyID = lobby.id, players = lobby.players
-)
+fun newMatch(lobby: Lobby): Match =
+  Match(
+    id = UUID.randomUUID().toString(), lobbyID = lobby.id, players = lobby.players
+  )
 
 /**
  * Creates a new [Match] state IF no existing entities collide with the given [entity]

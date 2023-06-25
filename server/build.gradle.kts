@@ -24,7 +24,7 @@ dependencies {
 
 application {
   // dynamically set main class name
-  mainClass.set("${group}.${rootProject.name}.$name.ServerKt")
+  mainClass.set("${group}.${rootProject.name.lowercase()}.$name.ServerKt")
   // set development mode
   if (project.ext["production"] as Boolean? != true) {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")

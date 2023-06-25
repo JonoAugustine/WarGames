@@ -8,6 +8,7 @@ import com.jonoaugustine.wargames.common.ecs.components.MapCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.PlayerCmpnt
 import com.jonoaugustine.wargames.common.ecs.entities.addBattleUnitOf
 import com.jonoaugustine.wargames.common.ecs.systems.CollisionSystem
+import com.jonoaugustine.wargames.common.ecs.systems.MovementSystem
 import com.jonoaugustine.wargames.common.ecs.systems.PathingSystem
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.Action
@@ -55,7 +56,7 @@ suspend fun startWorld(match: Match): Unit =
     .apply { gameStateContainer(GameState.PLANNING, match.mapSize) }
     // TODO remove test unit
     .apply {
-      for (i in 10 until match.mapSize.width step 70) {
+      for (i in 10 until match.mapSize.width step match.mapSize.width) {
         addBattleUnitOf(
           match.players.values.first().id,
           Vector(i.toFloat(), i.toFloat()),
@@ -84,6 +85,7 @@ fun serverWorld(match: Match): World =
       add(ServerReplicationSystem())
       add(CollisionSystem())
       add(PathingSystem())
+      add(MovementSystem())
     }
   }
 

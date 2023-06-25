@@ -1,70 +1,10 @@
-package com.jonoaugustine.wargames.common.ecs.systems
+package com.jonoaugustine.wargames.common.math
 
-import com.github.quillraven.fleks.Entity
-import com.github.quillraven.fleks.Fixed
-import com.github.quillraven.fleks.IntervalSystem
-import com.github.quillraven.fleks.World.Companion.inject
 import com.jonoaugustine.wargames.common.WgSize
-import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.BODY
-import com.jonoaugustine.wargames.common.ecs.components.PathingCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
-import com.jonoaugustine.wargames.common.ecs.gameState
-import com.jonoaugustine.wargames.common.math.*
-import com.jonoaugustine.wargames.common.math.Vector
-import com.jonoaugustine.wargames.common.max
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.math.abs
 
-class PathingSystem : IntervalSystem(Fixed(0.2f)) {
-
-  private val scope = inject<CoroutineScope>()
-
-  private fun onTickEntity(entity: Entity, obstacles: List<Vector>) {
-    val pathing = entity[PathingCmpnt]
-    val sprite = entity[SpriteCmpnt]
-
-    val factor = pathing.path?.size
-      ?.let { if (it > sprite.size.max) 15 else 10 }
-      ?: 20
-
-    val aStarPath = findShortestPath(
-      entity[TransformCmpnt].position,
-      pathing.destination,
-      factor,
-      obstacles,
-      0f..world.gameState!!.mapSize.width.toFloat(),
-      0f..world.gameState!!.mapSize.height.toFloat()
-    )
-    entity[PathingCmpnt].path = aStarPath
-    entity[PathingCmpnt].recalc = false
-  }
-
-  override fun onTick() {
-    // generate obstacles
-    val obstacles = world.family { all(CollisionCmpnt, SpriteCmpnt, TransformCmpnt) }
-      .entities
-      .associate { e ->
-        val (pos, rotation) = e[TransformCmpnt]
-        val hitboxes = e[CollisionCmpnt].hitboxes.filterKeys { it == BODY }.values
-        e to generateObstacles(
-          hitboxes.map { rectangleFrom(pos + it.offset, it.size).toRotated(rotation) }
-        )
-      }
-
-    // calc paths
-    val jobs = world.family { all(PathingCmpnt) }.entities
-      .filter { it[PathingCmpnt].recalc }
-      .map { scope.launch { onTickEntity(it, (obstacles - it).values.flatten()) } }
-
-    runBlocking { jobs.joinAll() }
-  }
-}
+data class Segment(val start: Vector, val end: Vector)
 
 /**
  * Represents a node in the pathfinding grid
@@ -108,19 +48,19 @@ fun findShortestPath(
   val marginGoal = rectangleFrom(goal, WgSize(margin, margin))
 
   /** Unevaluated nodes */
-  val openQueue = PriorityQueue<Node>(compareBy { it.fScore })
+  val frontierQueue = PriorityQueue<Node>(compareBy { it.fScore })
 
   /** Unevaluated nodes */
-  val openSet = mutableSetOf<Node>()
+  val frontierSet = mutableSetOf<Node>()
   val visited = mutableSetOf<Node>()
 
   // Add the start node to the open set
-  openQueue.add(startNode)
+  frontierQueue.add(startNode)
 
-  while (openQueue.isNotEmpty()) {
+  while (frontierQueue.isNotEmpty()) {
     // Find the node with the lowest fScore in the open set
-    val current = openQueue.poll() ?: break
-    openSet.remove(current)
+    val current = frontierQueue.poll() ?: break
+    frontierSet.remove(current)
 
     // Move the current node from the open set to the closed set
     visited.add(current)
@@ -140,15 +80,15 @@ fun findShortestPath(
         val tentativeGScore =
           current.gScore + current.position.distanceTo(nbr.position)
 
-        if (nbr !in openQueue || tentativeGScore < nbr.gScore) {
+        if (nbr !in frontierQueue || tentativeGScore < nbr.gScore) {
           // Update the neighbor node with the new gScore and hScore
           nbr.gScore = tentativeGScore
           nbr.hScore = nbr.position.distanceTo(goalNode.position)
 
           // Add the neighbor node to the open set
-          if (nbr !in openSet) {
-            openQueue.add(nbr)
-            openSet.add(nbr)
+          if (nbr !in frontierSet) {
+            frontierQueue.add(nbr)
+            frontierSet.add(nbr)
           }
         }
       }
@@ -156,6 +96,9 @@ fun findShortestPath(
 
   // No path found, return an empty list
   return emptyList()
+}
+
+fun heuristic(node: Node) {
 }
 
 /**
@@ -172,10 +115,17 @@ fun generateNeighbors(
   yRange: ClosedFloatingPointRange<Float>,
 ): List<Node> =
   listOf(
+    // top row
+    -abs(margin - 1f) to -abs(margin - 1f),
+    0f to -abs(margin - 1f),
+    abs(margin - 1f) to -abs(margin - 1f),
+    // center row
     -abs(margin - 1f) to 0f,
     abs(margin - 1f) to 0f,
-    0f to -abs(margin - 1f),
-    0f to abs(margin - 1f)
+    // bottom row
+    -abs(margin - 1f) to abs(margin - 1f),
+    0f to abs(margin - 1f),
+    abs(margin - 1f) to abs(margin - 1f),
   )
     .map { Vector(node.position.x + it.first, node.position.y + it.second) }
     // Check if the neighbor position is valid and not blocked by an obstacle
@@ -208,4 +158,106 @@ fun reconstructPath(goalNode: Node): List<Vector> {
   }
 
   return path
+}
+
+/**
+ * Generates a list of obstacle vectors using the scanline algorithm on a collection of polygons.
+ *
+ * @param polygons The collection of polygons.
+ * @return A list of obstacle vectors representing the edges of the polygons.
+ */
+fun generateObstacles(polygons: Collection<Polygon>): List<Vector> {
+  val obstacles = mutableListOf<Vector>()
+
+  for (polygon in polygons) {
+    val edges = getPolygonEdges(polygon)
+    val maxY = getMaxY(polygon)
+
+    val intersections = mutableMapOf<Int, MutableList<Float>>()
+
+    for (y in 0 until maxY) {
+      for (edge in edges) {
+        val p1 = edge.start
+        val p2 = edge.end
+
+        if ((p1.y <= y && p2.y > y) || (p2.y <= y && p1.y > y)) {
+          val xIntersection = calculateXIntersection(p1, p2, y)
+          intersections.getOrPut(y) { mutableListOf() }.add(xIntersection)
+        }
+      }
+    }
+
+    for ((y, intersectionList) in intersections) {
+      intersectionList.sort()
+      obstacles.addAll(getObstacleVectors(intersectionList, y))
+    }
+  }
+
+  return obstacles
+}
+
+/**
+ * Retrieves the edges of a polygon by connecting consecutive vertices.
+ *
+ * @param polygon The polygon represented as an array of vertices.
+ * @return A list of line segments representing the edges of the polygon.
+ */
+fun getPolygonEdges(polygon: Polygon): List<Segment> {
+  val edges = mutableListOf<Segment>()
+
+  for (i in polygon.indices) {
+    val j = (i + 1) % polygon.size
+    edges.add(Segment(polygon[i], polygon[j]))
+  }
+
+  return edges
+}
+
+/**
+ * Calculates the maximum Y-coordinate among all vertices in the polygon.
+ *
+ * @param polygon The polygon represented as an array of vertices.
+ * @return The maximum Y-coordinate.
+ */
+fun getMaxY(polygon: Polygon): Int {
+  var maxY = Int.MIN_VALUE
+
+  for (vector in polygon) {
+    maxY = maxOf(maxY, vector.y.toInt())
+  }
+
+  return maxY
+}
+
+/**
+ * Calculates the intersection point of a line segment with a given Y-coordinate.
+ *
+ * @param p1 The start point of the line segment.
+ * @param p2 The end point of the line segment.
+ * @param y The Y-coordinate of the intersection point.
+ * @return The X-coordinate of the intersection point.
+ */
+fun calculateXIntersection(p1: Vector, p2: Vector, y: Int): Float {
+  val t = (y - p1.y) / (p2.y - p1.y)
+  return p1.x + t * (p2.x - p1.x)
+}
+
+/**
+ * Generates a list of obstacle vectors from the sorted X-intersection points and the current Y-coordinate.
+ *
+ * @param intersections The sorted list of X-intersection points.
+ * @param y The current Y-coordinate.
+ * @return A list of obstacle vectors representing the line segments between the X-intersection points.
+ */
+fun getObstacleVectors(intersections: List<Float>, y: Int): List<Vector> {
+  val obstacleVectors = mutableListOf<Vector>()
+
+  for (i in 0 until intersections.size step 2) {
+    val xStart = intersections[i]
+    val xEnd = intersections[i + 1]
+    obstacleVectors.add(Vector(xStart, y.toFloat()))
+    obstacleVectors.add(Vector(xEnd, y.toFloat()))
+  }
+
+  return obstacleVectors
 }

@@ -12,11 +12,7 @@ import kotlin.math.sqrt
  * @property magnitude The magnitude (length) of the vector.
  */
 @Serializable
-data class Vector(
-  val x: Float = 0f,
-  val y: Float = 0f,
-  val magnitude: Float = 0f
-) {
+data class Vector(val x: Float = 0f, val y: Float = 0f) {
 
   constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())
 
@@ -30,6 +26,13 @@ data class Vector(
     val ZERO = Vector()
   }
 }
+
+val Vector.magnitude: Float get() = sqrt(x * x + y * y)
+
+fun Vector.normalized(): Vector = Vector(
+  if (x != 0f) (x / magnitude) else 0f,
+  if (y != 0f) (y / magnitude) else 0f
+)
 
 operator fun Vector.minus(size: WgSize): Vector =
   this - Vector(size.width.toFloat(), size.height.toFloat())

@@ -91,7 +91,13 @@ fun Application.configuration() {
 context(Application)
 fun Routing.ApiRoutes() {
   get("api/lobbies") {
-    call.respond(allLobbies().map { LobbyPreview(it.id, it.name, it.players.size) })
+    call.respond(allLobbies().map {
+      LobbyPreview(
+        it.id,
+        it.name,
+        it.players.size
+      )
+    })
   }
 }
 

@@ -77,7 +77,7 @@ data class Infantry(
   override fun copy() {
   }
 
-  override fun update(delta: Float, match: Match): Infantry =
+  override fun update(delta: Float, match: Match) =
     this.takeIf { match.state == RUNNING }
       .takeIf { path.isNotEmpty() }
       .let { it ?: return this }

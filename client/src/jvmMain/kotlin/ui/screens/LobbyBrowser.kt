@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.jonoaugustine.wargames.common.LobbyPreview
 import com.jonoaugustine.wargames.common.network.missives.JoinLobby
 import io.ktor.client.call.body
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -26,13 +25,13 @@ context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun LobbyBrowser() = Menu {
   val scope = rememberCoroutineScope()
-  var lobbies by remember { mutableStateOf(emptySet<LobbyPreview>()) }
+  var lobbies by remember { mutableStateOf(emptySet<com.jonoaugustine.wargames.common.LobbyPreview>()) }
   var refresh by remember { mutableStateOf(false) }
   var failed by remember { mutableStateOf(false) }
 
   LaunchedEffect(refresh) {
     try {
-      lobbies = client.get("api/lobbies").body<Set<LobbyPreview>>()
+      lobbies = client.get("api/lobbies").body<Set<com.jonoaugustine.wargames.common.LobbyPreview>>()
     } catch (e: Throwable) {
       e.printStackTrace()
     }

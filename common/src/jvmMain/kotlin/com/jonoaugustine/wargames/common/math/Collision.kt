@@ -67,7 +67,7 @@ fun runSAT(a: Polygon, b: Polygon): CollisionVector? {
 
     // Update the collision vector if the separation is larger
     if (distMin.absoluteValue > collisionVector.magnitude.absoluteValue) {
-      collisionVector = Vector(axis.x, axis.y, distMin)
+      collisionVector = Vector(axis.x, axis.y)
 
       // Calculate the nearest position where polygons do not collide
       val centerA = a.center() // Calculate the center point of polygon A

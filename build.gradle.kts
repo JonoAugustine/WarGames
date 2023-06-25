@@ -21,7 +21,7 @@ allprojects {
 
   tasks.withType<KotlinCompile>().all {
     kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlinOptions.jvmTarget = "17"
   }
 }
 

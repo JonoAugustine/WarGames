@@ -93,7 +93,8 @@ context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun World.DrawPathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-    world.family { all(PathingCmpnt) }.entities
+    world.family { all(PathingCmpnt) }
+      .entities
       .map { it[PathingCmpnt] }
       .filterNot { it.path == null }
       .forEach { pathing ->

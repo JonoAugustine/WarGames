@@ -80,5 +80,10 @@ fun ActionDistributorConfiguration.UnitDestinationHandler() =
 
     if (unit[OwnerCmpnt].ownerID != uid) return@add
 
-    unit.configure { it += PathingCmpnt(dest) }
+    if (unit.hasNo(PathingCmpnt)) {
+      unit.configure { it += PathingCmpnt(dest) }
+    } else {
+      unit[PathingCmpnt].destination = dest
+      unit[PathingCmpnt].recalc = true
+    }
   }

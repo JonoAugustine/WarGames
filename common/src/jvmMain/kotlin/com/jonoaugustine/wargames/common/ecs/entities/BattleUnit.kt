@@ -30,7 +30,7 @@ fun World.addBattleUnitOf(
   color: WgColor,
   config: EntityCreateContext.(Entity) -> Unit = {}
 ) = addUnitOf(owner, position, size, color) {
-  it += MovementPathCmpnt(speed)
+  it += PathMovementCmpnt(speed)
   it += CollisionCmpnt(
     mapOf(
       HitboxKeys.FRONT to Hitbox(size.copy(height = size.height / 10)),

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
@@ -15,7 +13,7 @@ kotlin {
   }
 
   sourceSets {
-    val commonMain by getting {
+    val jvmMain by getting {
       dependencies {
         implementation(kotlinx("coroutines-core", Versions.coroutines))
         implementation(kotlinx("serialization-json", Versions.serialization))
@@ -24,9 +22,3 @@ kotlin {
     }
   }
 }
-
-tasks.withType<KotlinCompile> {
-  kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
-  kotlinOptions.jvmTarget = "17"
-}
-

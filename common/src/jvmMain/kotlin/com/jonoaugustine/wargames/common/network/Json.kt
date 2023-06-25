@@ -65,7 +65,7 @@ val JsonConfig = Json {
       subclass(PlayerCmpnt::class)
       subclass(TransformCmpnt::class)
       subclass(CollisionCmpnt::class)
-      subclass(MovementPathCmpnt::class)
+      subclass(PathMovementCmpnt::class)
       subclass(SpriteCmpnt::class)
       subclass(NameCmpnt::class)
       subclass(MapCmpnt::class)
