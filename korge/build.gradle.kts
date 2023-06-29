@@ -27,13 +27,18 @@ korge {
   name = project.name
   orientation = DEFAULT
 
+  entryPoint = "main"
+  jvmMainClassName = "${project.group}.wargames.korge.MainKt"
+
   targetJvm()
   serializationJson()
 
   dependencies {
     add("jvmMainImplementation", project(":common"))
     add("commonMainApi", "ch.qos.logback:logback-classic:1.2.3")
+    add("commonMainApi", ktor.client("cio"))
     add("commonMainApi", ktor.client("websockets"))
-    add("jvmMainApi", ktor.client("cio"))
+    add("commonMainApi", ktor.client("content-negotiation"))
+    add("commonMainApi", ktor("serialization-kotlinx-json"))
   }
 }
