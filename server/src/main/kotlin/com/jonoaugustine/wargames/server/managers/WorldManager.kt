@@ -56,12 +56,12 @@ suspend fun startWorld(match: Match): Unit =
     .apply { gameStateContainer(GameState.PLANNING, match.mapSize) }
     // TODO remove test unit
     .apply {
-      for (i in 10 until match.mapSize.width step match.mapSize.width) {
+      for (i in 10 until match.mapSize.width step 50) {
         addBattleUnitOf(
           match.players.values.first().id,
           Vector(i.toFloat(), i.toFloat()),
-          10f,
-          WgSize(25, 25),
+          15f,
+          WgSize(20, 20),
           WgColor.Red
         )
       }

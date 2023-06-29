@@ -95,7 +95,7 @@ fun World.DrawPathLayer() {
   Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
     world.family { all(PathingCmpnt) }
       .entities
-      .map { it[PathingCmpnt] }
+      .mapNotNull { it.getOrNull(PathingCmpnt) }
       .filterNot { it.path == null }
       .forEach { pathing ->
         if (pathing.path!!.size <= 1) return@forEach

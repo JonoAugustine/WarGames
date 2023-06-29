@@ -6,7 +6,6 @@ import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.WgSize
 import com.jonoaugustine.wargames.common.ecs.Replicated
 import com.jonoaugustine.wargames.common.math.Vector
-import com.jonoaugustine.wargames.common.math.minus
 import com.jonoaugustine.wargames.common.math.plus
 import kotlinx.serialization.Serializable
 
@@ -16,10 +15,6 @@ data class TransformCmpnt(var position: Vector, var rotation: Float = 0f) :
 
   fun moveOrigin(vector: Vector) {
     this.position = this.position + vector
-  }
-
-  fun moveCenter(vector: Vector, size: WgSize) {
-    this.position = (this.position + vector) - Vector(size.width / 2, size.height / 2)
   }
 
   fun center(size: WgSize): Vector =

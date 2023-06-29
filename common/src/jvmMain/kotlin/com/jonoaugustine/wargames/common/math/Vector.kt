@@ -18,9 +18,6 @@ data class Vector(val x: Float = 0f, val y: Float = 0f) {
 
   override fun toString(): String = "($x, $y, ${magnitude}u)"
 
-  /**
-   * Represents a zero vector with all components set to zero.
-   */
   companion object {
 
     val ZERO = Vector()

@@ -3,7 +3,9 @@ pluginManagement {
     google()
     gradlePluginPortal()
     mavenCentral()
+    mavenLocal();
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    maven("https://plugins.gradle.org/m2/")
   }
 
   plugins {
@@ -14,4 +16,4 @@ pluginManagement {
 }
 
 rootProject.name = "WarGames"
-include(":common", ":server", ":client")
+include(":common", ":server", ":client", ":korge")

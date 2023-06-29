@@ -8,27 +8,22 @@ import com.jonoaugustine.wargames.common.ecs.components.*
 import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.BODY
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.*
-import com.jonoaugustine.wargames.common.math.Vector
-import com.jonoaugustine.wargames.common.max
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.*
 
-class PathingSystem : IntervalSystem(Fixed(0.2f)) {
+class PathingSystem : IntervalSystem(Fixed(1f / 20)) {
 
   private val scope = inject<CoroutineScope>()
   private val pathingJobs = Collections.synchronizedMap(mutableMapOf<Entity, Job>())
 
-  private fun setPath(entity: Entity, obstacles: List<Vector>) {
+  private fun setPath(entity: Entity, obstacles: Collection<Polygon>) {
     val pathing = entity[PathingCmpnt]
     val sprite = entity[SpriteCmpnt]
 
-    val margin = sprite.size.max / 2
-    //pathing.path?.size
-    //?.let { if (it > sprite.size.max) 5 else 2 }
-    //?: 10
+    val margin = 2
 
     val aStarPath = findShortestPath(
       centerOf(entity[TransformCmpnt], sprite),
@@ -49,9 +44,7 @@ class PathingSystem : IntervalSystem(Fixed(0.2f)) {
       .associate { e ->
         val (pos, rotation) = e[TransformCmpnt]
         val hitboxes = e[CollisionCmpnt].hitboxes.filterKeys { it == BODY }.values
-        e to generateObstacles(
-          hitboxes.map { rectangleFrom(pos + it.offset, it.size).toRotated(rotation) }
-        )
+        e to hitboxes.map { rectangleFrom(pos + it.offset, it.size).toRotated(rotation) }
       }
 
     // calc paths

@@ -37,8 +37,8 @@ data class Match(
   val entities: Map<EntityID, Entity> = emptyMap(),
   val background: WgColor = WgColor.Grass,
   val mapSize: WgSize = WgSize(
-    800,
-    800
+    200,
+    200
   )
 ) {
 

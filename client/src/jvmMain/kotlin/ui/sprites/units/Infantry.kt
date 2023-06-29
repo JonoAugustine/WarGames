@@ -31,7 +31,6 @@ import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.centerOn
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.Vector
 import com.jonoaugustine.wargames.common.network.missives.MoveUnit
@@ -64,10 +63,12 @@ fun World.infantrySpriteOf(entity: Entity) {
       .size(sprite.size.dp)
       .rotate(entity[TransformCmpnt].rotation)
       .background(sprite.color.composeColor)
-      .border(1.dp,
+      .border(
+        1.dp,
         if (selectedEntity == entity) Color.White
         else if (entity[CollisionCmpnt].colliding) Color.Yellow
-        else Color.Black)
+        else Color.Black
+      )
       .onClick(
         matcher = PointerMatcher.mouse(PointerButton.Primary),
         interactionSource = interactionSource,
@@ -156,7 +157,7 @@ private suspend fun recordPath(
 ) {
   var path by mutableStateOf(listOf<Vector>())
   var initialOffset = Offset(0f, 0f)
-  val center = transform.position centerOn sprite.size
+  val center = transform.center(sprite.size)
   detectDragGestures(
     onDragStart = { offset ->
       initialOffset = offset

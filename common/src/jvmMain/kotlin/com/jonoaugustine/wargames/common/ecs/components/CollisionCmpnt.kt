@@ -8,17 +8,17 @@ import com.jonoaugustine.wargames.common.ecs.Replicated
 import com.jonoaugustine.wargames.common.math.*
 import kotlinx.serialization.Serializable
 
-object HitboxKeys {
-
-  const val FRONT = "FRONT"
-  const val BODY = "BODY"
-  const val REAR = "REAR"
+enum class HitboxKeys {
+  FRONT,
+  BODY,
+  REAR,
+  VISION,
 }
 
 @Serializable
 data class Collision(
   val entity: Entity,
-  val hitboxKey: String,
+  val hitboxKey: HitboxKeys,
   val vector: CollisionVector
 )
 
@@ -38,7 +38,7 @@ fun Hitbox.polygonWith(origin: Vector, rotation: Float): Polygon =
 
 @Serializable
 data class CollisionCmpnt(
-  var hitboxes: Map<String, Hitbox> = emptyMap()
+  var hitboxes: Map<HitboxKeys, Hitbox> = emptyMap()
 ) : Component<CollisionCmpnt>, Replicated {
 
   /** Whether any hitbox has a collision */

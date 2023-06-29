@@ -8,6 +8,7 @@ import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.WgSize
 import com.jonoaugustine.wargames.common.ecs.components.*
 import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.times
 
 fun World.addUnitOf(
   owner: ID,
@@ -35,6 +36,7 @@ fun World.addBattleUnitOf(
     mapOf(
       HitboxKeys.FRONT to Hitbox(size.copy(height = size.height / 10)),
       HitboxKeys.BODY to Hitbox(size),
+      HitboxKeys.VISION to Hitbox(size * 2),
     )
   )
   config(it)

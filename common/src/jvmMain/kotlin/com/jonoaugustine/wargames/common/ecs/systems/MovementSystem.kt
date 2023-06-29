@@ -4,13 +4,13 @@ import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
 import com.jonoaugustine.wargames.common.ecs.components.*
-import com.jonoaugustine.wargames.common.math.*
+import com.jonoaugustine.wargames.common.math.minus
+import com.jonoaugustine.wargames.common.math.normalized
+import com.jonoaugustine.wargames.common.math.times
 
 class MovementSystem : IteratingSystem(family = family {
   all(PathMovementCmpnt, PathingCmpnt, TransformCmpnt, SpriteCmpnt)
 }) {
-
-  private val minTravel = Vector(0.1f, 0.1f)
 
   override fun onTickEntity(entity: Entity) = entity[PathingCmpnt]
     .takeUnless { it.path == null }
@@ -22,12 +22,12 @@ class MovementSystem : IteratingSystem(family = family {
 
       // if no path, skip
       when {
-        pathing.path!!.isEmpty()                -> {
+        pathing.path!!.isEmpty()                 -> {
           movement.waypoint = 0
           return
         }
 
-        movement.waypoint > pathing.path!!.size -> {
+        movement.waypoint >= pathing.path!!.size -> {
           pathing.path = null
           movement.waypoint = 0
           return
@@ -40,8 +40,7 @@ class MovementSystem : IteratingSystem(family = family {
       val distance = movement.baseSpeed * deltaTime
       val travel = direction * distance
 
-      val newOrigin = transform.position + travel
-      transform.position = newOrigin
+      transform.moveOrigin(travel)
       val newCenter = transform.center(sprite.size)
 
       if (
@@ -49,7 +48,6 @@ class MovementSystem : IteratingSystem(family = family {
         newCenter.y.toInt() == nextPoint.y.toInt()
       ) {
         movement.waypoint += 1
-        return
       }
     }
 }

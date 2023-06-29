@@ -38,7 +38,7 @@ fun findShortestPath(
   start: Vector,
   goal: Vector,
   margin: Int,
-  obstacles: Collection<Vector>,
+  obstacles: Collection<Polygon>,
   xBound: ClosedFloatingPointRange<Float>,
   yBound: ClosedFloatingPointRange<Float>,
 ): List<Vector> {
@@ -98,9 +98,6 @@ fun findShortestPath(
   return emptyList()
 }
 
-fun heuristic(node: Node) {
-}
-
 /**
  * Generates the neighboring nodes for a given node
  * @param node The current node
@@ -110,7 +107,7 @@ fun heuristic(node: Node) {
 fun generateNeighbors(
   node: Node,
   margin: Int,
-  obstacles: Collection<Vector>,
+  obstacles: Collection<Polygon>,
   xRange: ClosedFloatingPointRange<Float>,
   yRange: ClosedFloatingPointRange<Float>,
 ): List<Node> =
@@ -129,7 +126,8 @@ fun generateNeighbors(
   )
     .map { Vector(node.position.x + it.first, node.position.y + it.second) }
     // Check if the neighbor position is valid and not blocked by an obstacle
-    .filter { isValidPosition(it, xRange, yRange) && !obstacles.contains(it) }
+    .filter { withinBounds(it, xRange, yRange) }
+    .filter { v -> obstacles.none { it.contains(v) } }
     .map { Node(it, node) }
 
 /**
@@ -137,7 +135,7 @@ fun generateNeighbors(
  * @param position The position to check
  * @return True if the position is valid, false otherwise
  */
-fun isValidPosition(
+fun withinBounds(
   position: Vector,
   xRange: ClosedFloatingPointRange<Float>,
   yRange: ClosedFloatingPointRange<Float>,
@@ -166,8 +164,8 @@ fun reconstructPath(goalNode: Node): List<Vector> {
  * @param polygons The collection of polygons.
  * @return A list of obstacle vectors representing the edges of the polygons.
  */
-fun generateObstacles(polygons: Collection<Polygon>): List<Vector> {
-  val obstacles = mutableListOf<Vector>()
+fun generateObstacles(polygons: Collection<Polygon>): Set<Vector> {
+  val obstacles = mutableSetOf<Vector>()
 
   for (polygon in polygons) {
     val edges = getPolygonEdges(polygon)

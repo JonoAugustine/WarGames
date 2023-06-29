@@ -7,6 +7,7 @@ object Versions {
   const val logback = "1.4.7"
   const val compose = "1.4.2"
   const val fleks = "SNAPSHOT"
+  const val korge = "4.0.7"
 }
 
 fun kotlinx(project: String, version: String) = """org.jetbrains.kotlinx:kotlinx-$project:$version"""
