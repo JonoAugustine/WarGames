@@ -2,7 +2,9 @@ package com.jonoaugustine.wargames.korge
 
 import com.jonoaugustine.wargames.common.User
 import com.jonoaugustine.wargames.common.network.missives.DisconnectEvent
+import com.jonoaugustine.wargames.korge.scenes.LobbyScene
 import com.jonoaugustine.wargames.korge.scenes.LoginScene
+import com.jonoaugustine.wargames.korge.scenes.MainScene
 import korlibs.image.color.Colors
 import korlibs.korge.Korge
 import korlibs.korge.scene.sceneContainer
@@ -23,16 +25,19 @@ suspend fun main() = Korge(
   //  JsonConfig.encodeToString(SaveData(User("1", "user"), "password"))
 
   val sceneContainer = sceneContainer()
-  injector.mapSingleton { LoginScene }
+  injector
+    .mapSingleton { LoginScene() }
+    .mapSingleton { MainScene() }
+    .mapSingleton { LobbyScene() }
 
   SocketManager.sceneContainer = sceneContainer
   sceneContainer.navigationEntries
 
   SocketManager.bus<DisconnectEvent> {
-    sceneContainer.changeTo { LoginScene }
+    sceneContainer.changeTo<LoginScene>()
     SocketManager.connectAs(state.username)
   }
 
-  sceneContainer.changeTo { LoginScene }
+  sceneContainer.changeTo<LoginScene>()
 }
 

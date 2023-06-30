@@ -1,6 +1,10 @@
 package com.jonoaugustine.wargames.korge.scenes
 
 import com.jonoaugustine.wargames.korge.SocketManager
+import com.jonoaugustine.wargames.korge.ui.Corners.BOTTOM_RIGHT
+import com.jonoaugustine.wargames.korge.ui.cornerButton
+import com.jonoaugustine.wargames.korge.ui.primaryButton
+import com.jonoaugustine.wargames.korge.ui.style
 import com.jonoaugustine.wargames.korge.virtualSize
 import korlibs.image.color.Colors
 import korlibs.korge.annotations.KorgeExperimental
@@ -8,7 +12,6 @@ import korlibs.korge.input.onClick
 import korlibs.korge.scene.Scene
 import korlibs.korge.ui.UIButton
 import korlibs.korge.ui.UITextInput
-import korlibs.korge.ui.uiButton
 import korlibs.korge.ui.uiTextInput
 import korlibs.korge.view.SContainer
 import korlibs.korge.view.align.alignTopToBottomOf
@@ -19,7 +22,7 @@ import korlibs.korge.view.text
 import korlibs.math.geom.Size
 import kotlin.time.Duration.Companion.seconds
 
-object LoginScene : Scene() {
+class LoginScene : Scene() {
 
   @OptIn(KorgeExperimental::class)
   private lateinit var username: UITextInput
@@ -39,23 +42,24 @@ object LoginScene : Scene() {
       colorMul = Colors.ORANGE
     }
 
-    uiButton("Login", Size(310, 70)) {
+    primaryButton("Login", 52f) {
       alignTopToBottomOf(username, 10)
       centerXOnStage()
-      textSize = 52f
-      textColor = Colors.GHOSTWHITE
-      bgColorOut = Colors.DARKGREEN
-      bgColorOver = Colors.FORESTGREEN
-      background.shadowRadius = 0f
       onClick {
         if (SocketManager.connectAs(username.text)) {
-          sceneContainer.changeTo { MainScene }
+          sceneContainer.changeTo<MainScene>()
         } else {
-          login.bgColorOver = Colors.RED
+          login.bgColorOver = style.value.colors.negative
           kotlinx.coroutines.delay(2.seconds)
           login.bgColorOver = Colors.FORESTGREEN
         }
       }
+    }
+
+    cornerButton("Exit Game", BOTTOM_RIGHT) {
+      bgColorOut = style.value.colors.negative
+      bgColorOver = style.value.colors.negative
+      onClick { gameWindow.close(0) }
     }
   }
 }
