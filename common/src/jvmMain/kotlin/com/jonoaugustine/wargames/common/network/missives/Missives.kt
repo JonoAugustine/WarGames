@@ -20,6 +20,10 @@ sealed interface Event
 open class ErrorEvent(val message: String = "an unknown error occurred") : Event
 
 @Serializable
+@SerialName("error.disconnect")
+object DisconnectEvent : ErrorEvent("socket disconnected")
+
+@Serializable
 sealed interface UserAction : Action
 
 @Serializable

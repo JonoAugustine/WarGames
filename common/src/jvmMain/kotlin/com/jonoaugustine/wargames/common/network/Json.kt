@@ -41,6 +41,7 @@ val JsonConfig = Json {
     }
     polymorphic(Event::class) {
       subclass(ErrorEvent::class)
+      subclass(DisconnectEvent::class)
       // USER
       subclass(UserConnected::class)
       // Lobby

@@ -1,6 +1,7 @@
 import korlibs.korge.gradle.KorgeGradlePlugin
 import korlibs.korge.gradle.Orientation.DEFAULT
 import korlibs.korge.gradle.korge
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
   repositories {
@@ -20,6 +21,13 @@ plugins {
 }
 
 apply<KorgeGradlePlugin>()
+
+tasks.withType<KotlinCompile>().all {
+  kotlinOptions {
+    freeCompilerArgs = listOf("-Xcontext-receivers")
+    jvmTarget = "17"
+  }
+}
 
 korge {
   id = "${project.group}.${project.name}.korge".lowercase()

@@ -1,7 +1,7 @@
 package com.jonoaugustine.wargames.korge.scenes
 
+import com.jonoaugustine.wargames.korge.SocketManager
 import com.jonoaugustine.wargames.korge.virtualSize
-import io.ktor.client.plugins.websocket.ClientWebSocketSession
 import korlibs.image.color.Colors
 import korlibs.korge.input.onClick
 import korlibs.korge.scene.Scene
@@ -14,7 +14,7 @@ import korlibs.korge.view.positionY
 import korlibs.korge.view.text
 import korlibs.math.geom.Size
 
-class MainScene(private val session: ClientWebSocketSession) : Scene() {
+object MainScene : Scene() {
 
   override suspend fun SContainer.sceneInit() {
     val centerText = text("Welcome", 64f) {
@@ -31,7 +31,13 @@ class MainScene(private val session: ClientWebSocketSession) : Scene() {
       bgColorOver = Colors.FORESTGREEN
       background.shadowRadius = 0f
       onClick {
-        sceneContainer.changeTo { LobbyScene(session) }
+        sceneContainer.changeTo { LobbyScene }
+      }
+    }
+
+    uiButton("Reconnect") {
+      onClick {
+        SocketManager.connectAs("user123")
       }
     }
   }

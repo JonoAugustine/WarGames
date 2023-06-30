@@ -20,8 +20,10 @@ allprojects {
   }
 
   tasks.withType<KotlinCompile>().all {
-    kotlinOptions.freeCompilerArgs = listOf("-Xcontext-receivers")
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions {
+      freeCompilerArgs += "-Xcontext-receivers"
+      jvmTarget = "17"
+    }
   }
 }
 

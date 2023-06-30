@@ -1,6 +1,6 @@
 package com.jonoaugustine.wargames.korge.scenes
 
-import com.jonoaugustine.wargames.korge.connectSocket
+import com.jonoaugustine.wargames.korge.SocketManager
 import com.jonoaugustine.wargames.korge.virtualSize
 import korlibs.image.color.Colors
 import korlibs.korge.annotations.KorgeExperimental
@@ -21,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 
 object LoginScene : Scene() {
 
+  @OptIn(KorgeExperimental::class)
   private lateinit var username: UITextInput
   private lateinit var login: UIButton
 
@@ -47,13 +48,13 @@ object LoginScene : Scene() {
       bgColorOver = Colors.FORESTGREEN
       background.shadowRadius = 0f
       onClick {
-        connectSocket(username.text)
-          ?.also { sceneContainer.changeTo { MainScene(it) } }
-          ?: let {
-            login.bgColorOver = Colors.RED
-            kotlinx.coroutines.delay(2.seconds)
-            login.bgColorOver = Colors.FORESTGREEN
-          }
+        if (SocketManager.connectAs(username.text)) {
+          sceneContainer.changeTo { MainScene }
+        } else {
+          login.bgColorOver = Colors.RED
+          kotlinx.coroutines.delay(2.seconds)
+          login.bgColorOver = Colors.FORESTGREEN
+        }
       }
     }
   }
