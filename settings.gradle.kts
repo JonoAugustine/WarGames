@@ -16,4 +16,4 @@ pluginManagement {
 }
 
 rootProject.name = "WarGames"
-include(":common", ":server", ":client", ":korge")
+include(":common", ":server", ":client")
