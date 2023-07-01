@@ -14,6 +14,10 @@ sealed interface LobbyAction : Action
 object CreateLobby : LobbyAction
 
 @Serializable
+@SerialName("lobby.start")
+object StartLobby : LobbyAction
+
+@Serializable
 @SerialName("lobby.created")
 data class LobbyCreated(val lobby: Lobby) : LobbyEvent
 

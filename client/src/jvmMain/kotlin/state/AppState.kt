@@ -8,6 +8,7 @@ import com.github.quillraven.fleks.Component
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.configureWorld
+import com.jonoaugustine.wargames.common.Lobby
 import com.jonoaugustine.wargames.common.User
 import com.jonoaugustine.wargames.common.network.JsonConfig
 import com.jonoaugustine.wargames.common.network.missives.*
@@ -36,8 +37,7 @@ enum class Page {
 
 data class AppStateData(
   val user: User = User("local", System.getProperty("os.name") ?: "LocalUser"),
-  val lobby: com.jonoaugustine.wargames.common.Lobby? = null,
-  val match: com.jonoaugustine.wargames.common.Match? = null,
+  val lobby: Lobby? = null,
 )
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -67,7 +67,6 @@ object AppState {
     with(GlobalScope) {
       listenToUserEvents()
       listenToLobbyEvents()
-      listenToMatchEvents()
       listenToWorldEvents()
       Eventbus<ErrorEvent> { event -> println("ERROR EVENT: ${event.message}") }
     }
@@ -92,11 +91,6 @@ object AppState {
       update { it.copy(lobby = lobby) }
       goTo(LOBBY)
     }
-  }
-
-  context(CoroutineScope)
-  private fun listenToMatchEvents() {
-    Eventbus<MatchEvent> { (match) -> update { it.copy(match = match) } }
   }
 
   context(CoroutineScope)

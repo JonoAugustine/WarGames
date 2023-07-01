@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.jonoaugustine.wargames.common.network.missives.CreateMatch
+import com.jonoaugustine.wargames.common.network.missives.StartLobby
 import com.jonoaugustine.wargames.common.network.missives.UpdateLobbyName
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +57,7 @@ fun LobbyScreen() = Menu {
   ) {
     Button(
       colors = buttonColors(backgroundColor = Color.Green),
-      onClick = { scope.launch(Dispatchers.IO) { send(CreateMatch(state.lobby!!.id)) } },
+      onClick = { scope.launch(Dispatchers.IO) { send(StartLobby) } },
       content = { Text("Start Match") }
     )
   }

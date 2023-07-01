@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
-import com.jonoaugustine.wargames.common.Match.State.PLANNING
 import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
+import com.jonoaugustine.wargames.common.ecs.GameState.PLANNING
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
@@ -123,7 +123,7 @@ fun World.infantrySpriteOf(entity: Entity) {
     //}
 
     // Path selector icon
-    if (state.match!!.state == PLANNING) {
+    if (world.gameState?.state == PLANNING) {
       val pathSelectorSize = Size(10f, 10f)
       Box(Modifier.clip(CircleShape)
         .background(Color.Black.copy(alpha = if (hovering) 0.7f else 0f))

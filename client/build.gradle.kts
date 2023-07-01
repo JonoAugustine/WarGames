@@ -42,7 +42,7 @@ kotlin {
 
 compose.desktop {
   application {
-    mainClass = "MainKt"
+    mainClass = "ClientMainKt"
     nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
       packageName = rootProject.name

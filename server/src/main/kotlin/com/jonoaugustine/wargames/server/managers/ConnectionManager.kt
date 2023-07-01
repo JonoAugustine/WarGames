@@ -3,54 +3,51 @@ package com.jonoaugustine.wargames.server.managers
 import com.jonoaugustine.wargames.common.User
 import com.jonoaugustine.wargames.common.UserID
 import com.jonoaugustine.wargames.common.network.missives.*
+import com.jonoaugustine.wargames.common.userOf
+import com.jonoaugustine.wargames.server.ActionResponse
+import com.jonoaugustine.wargames.server.errorEvent
 import io.ktor.server.websocket.WebSocketServerSession
+import io.ktor.util.logging.error
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.*
+import org.slf4j.LoggerFactory
 
-typealias ActionResponse = Pair<Event, Set<UserID>>
+private val logger = LoggerFactory.getLogger("Connection Manager")
+private var connections: Map<UserID, Connection> = mapOf()
+private val mutex = Mutex()
 
 data class Connection(val user: User, val session: WebSocketServerSession)
 
 val Connection.id get() = user.id
-private var connections: Map<UserID, Connection> = mapOf()
-private val mutex = Mutex()
-
-suspend fun getConnection(id: String): Connection? = mutex.withLock { connections[id] }
+val Connection.name get() = user.name
 
 suspend fun Connection.save() = mutex.withLock { connections += (id to this) }
 
-/** Returns an existing [Connection] with the given [id] or a new [Connection] */
-suspend fun WebSocketServerSession.getConnectionOrNew(
-  id: String,
-  name: String
-): Connection =
-  getConnection(id)
-    ?.copy(session = this)
-    ?.also { it.save() }
-    ?.also { println("CONNECT(RENEW): ${it.id}") }
-    ?: Connection(User(UUID.randomUUID().toString(), name), this)
-      .also { mutex.withLock { connections += (it.id to it) } }
-      .also { println("CONNECT(NEW): ${it.user.id}") }
+fun getConnection(id: UserID): Connection? = connections[id]
 
-suspend fun WebSocketServerSession.onClose(uid: String) {
-  // val connection = mutex.withLock { connections[uid] } ?: return
-  // mutex.withLock { connections = connections.filterValues { it.id != uid } }
-  // TODO("handle player leaving match")
+/** Update the [Connection.session] */
+suspend fun Connection.refresh(session: WebSocketServerSession): Connection =
+  copy(session = session)
+    .apply { save() }
+    .also { logger.debug("CONNECT(REFRESH): ${it.id}") }
+
+suspend fun WebSocketServerSession.newConnection(username: String): Connection =
+  Connection(userOf(username), this)
+    .apply { save() }
+    .also { logger.debug("CONNECT(NEW): ${it.id}") }
+
+suspend fun Connection.handleAction(action: Action): ActionResponse? = when (action) {
+  is UserAction  -> handleUserAction(action)
+  is LobbyAction -> handleLobbyAction(action)
+  is WorldAction -> getLobbyOf(user)
+    .let { it ?: return errorEvent("lobby not found") }
+    .let { (id to action) queueTo it.id }
+    .takeIf { it.isFailure }
+    ?.also { logger.error("failed to queue action") }
+    ?.exceptionOrNull()
+    ?.also { logger.error(it) }
+    .let { null }
 }
-
-suspend fun Connection.handleAction(action: Action): ActionResponse? =
-  when (action) {
-    is UserAction  -> handleUserAction(action)
-    is LobbyAction -> handleLobbyAction(action)
-    is MatchAction -> handleMatchAction(action)
-    is WorldAction -> getMatchOf(user)
-      .let { it ?: return errorEventOf("match not found") }
-      .let { (id to action) queueTo it.id }
-      .takeIf { it.isFailure }
-      ?.also { println("failed to queue action") }
-      .let { null }
-  }
 
 suspend fun Connection.handleUserAction(action: UserAction): ActionResponse =
   when (action) {
@@ -59,8 +56,8 @@ suspend fun Connection.handleUserAction(action: UserAction): ActionResponse =
       .let { UserUpdated(it.user) } to setOf(id)
   }
 
-context(Connection)
-fun errorEventOf(
-  message: String = "an unknown error occurred",
-  vararg ids: UserID = arrayOf(id)
-): Pair<ErrorEvent, Set<UserID>> = ErrorEvent(message) to setOf(*ids)
+suspend fun WebSocketServerSession.onClose(uid: UserID) {
+  // val connection = mutex.withLock { connections[uid] } ?: return
+  // mutex.withLock { connections = connections.filterValues { it.id != uid } }
+  // TODO("handle player leaving match")
+}

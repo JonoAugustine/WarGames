@@ -44,7 +44,7 @@ import util.toVector
 context(AppState, DefaultClientWebSocketSession)
 @Composable
 fun MatchScreen() {
-  if (state.match == null) return goTo(MAIN_MENU)
+  if (state.lobby == null) return goTo(MAIN_MENU)
   var sprites by remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
 
   LaunchedEffect(world) {

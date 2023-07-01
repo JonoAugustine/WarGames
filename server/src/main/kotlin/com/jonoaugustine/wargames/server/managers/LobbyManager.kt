@@ -1,7 +1,11 @@
 package com.jonoaugustine.wargames.server.managers
 
 import com.jonoaugustine.wargames.common.*
+import com.jonoaugustine.wargames.common.ecs.replicationSnapshot
 import com.jonoaugustine.wargames.common.network.missives.*
+import com.jonoaugustine.wargames.server.ActionResponse
+import com.jonoaugustine.wargames.server.errorEvent
+import com.jonoaugustine.wargames.server.responseOf
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
@@ -9,7 +13,7 @@ import java.util.*
 /**
  * dan niki
  *
- * [U]serID -> [Lobby]
+ * [UserID] -> [Lobby]
  *
  * [LobbyID] -> [Lobby]
  */
@@ -57,17 +61,18 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
         .also { it.save() }
         .let { LobbyCreated(it) to setOf(id) }
 
+    StartLobby         -> getLobbyOf(user)
+      .let { it ?: return errorEvent("missing lobby") }
+      .also { /* TODO Lobby is ready check */ }
+      .let { it to startWorld(it) }
+      .let { (lby, world) -> lby.responseOf(WorldUpdated(world.replicationSnapshot())) }
+
     is JoinLobby       ->
       getLobby(action.lobbyID)
         ?.also { lobby ->
           lobby.players[id]?.also { return LobbyJoined(it, lobby) to setOf(id) }
         }
-        ?.let {
-          it to Player(
-            user,
-            WgColor.Blue
-          )
-        }
+        ?.let { it to Player(user, WgColor.Blue) }
         ?.let { (lobby, player) -> lobby.addPlayer(player) to player }
         ?.also { (lobby) -> lobby.save() }
         ?.let { (lobby, player) -> LobbyJoined(player, lobby) to lobby.players.keys }
@@ -81,4 +86,5 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
       ?: (ErrorEvent("missing access") to setOf(id))
 
     is CloseLobby      -> TODO()
+
   }
