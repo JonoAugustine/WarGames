@@ -50,8 +50,25 @@ suspend fun killWorld(id: MatchID): Job? = mutex.withLock {
 
 suspend fun getWorld(id: MatchID): World? = mutex.withLock { worlds[id] }
 
-suspend fun startWorld(match: Match): Unit =
-  serverWorld(match)
+suspend fun Lobby.startWorld(): Unit = TODO()
+
+private suspend fun Lobby.generateWorld(capacity: UInt = 1000u): World =
+  configureWorld(capacity.toInt()) {
+    injectables {
+      add(worldScope)
+      add<LobbyId>(LobbyId(1))
+    }
+    systems {
+      add(ServerReplicationSystem())
+      add(CollisionSystem())
+      add(PathingSystem())
+      add(MovementSystem())
+    }
+  }
+
+@Deprecated("will be deleted once the compose client is ready")
+suspend fun startWorldWithMatch(match: Match): Unit =
+  serverWorldOf(match)
     .apply { entity { it += MapCmpnt(WgColor.Grass) } }
     .apply { gameStateContainer(GameState.PLANNING, match.mapSize) }
     // TODO remove test unit
@@ -75,7 +92,8 @@ suspend fun startWorld(match: Match): Unit =
     .let { launchWorldLoop(match.id, it) }
     .let { mutex.withLock { worldJobs += match.id to it } }
 
-fun serverWorld(match: Match): World =
+@Deprecated("will be deleted once the compose client is ready")
+fun serverWorldOf(match: Match): World =
   configureWorld(1000) {
     injectables {
       add(worldScope)

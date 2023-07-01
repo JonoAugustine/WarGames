@@ -18,6 +18,10 @@ object CreateLobby : LobbyAction
 data class LobbyCreated(val lobby: Lobby) : LobbyEvent
 
 @Serializable
+@SerialName("lobby.updated")
+data class LobbyUpdated(val lobby: Lobby) : LobbyEvent
+
+@Serializable
 @SerialName("lobby.close")
 data class CloseLobby(val lobbyID: Lobby) : LobbyAction
 
@@ -42,5 +46,5 @@ data class LobbyLeft(val playerID: String, val lobby: Lobby) : LobbyEvent
 data class UpdateLobbyName(val lobbyID: LobbyID, val name: String) : LobbyAction
 
 @Serializable
-@SerialName("lobby.updated")
-data class LobbyUpdated(val lobby: Lobby) : LobbyEvent
+@SerialName("lobby.start")
+object StartLobby : LobbyAction

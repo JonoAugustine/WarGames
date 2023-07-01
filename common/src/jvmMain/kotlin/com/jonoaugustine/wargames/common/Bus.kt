@@ -17,7 +17,7 @@ class Bus<T> {
 
   /** Add a listener to the bus */
   context(CoroutineScope)
-  inline operator fun <reified Sub : T> invoke(noinline handler: suspend (T) -> Unit) {
+  inline operator fun <reified Sub : T> invoke(noinline handler: suspend (Sub) -> Unit) {
     launch { events.collect { sub -> if (sub is Sub) handler(sub) } }
   }
 

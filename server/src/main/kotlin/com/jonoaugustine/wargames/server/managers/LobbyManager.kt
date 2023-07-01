@@ -57,6 +57,11 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
         .also { it.save() }
         .let { LobbyCreated(it) to setOf(id) }
 
+    StartLobby -> getLobbyOf(user)
+      .let { it ?: return errorEventOf("user is not in a lobby") }
+      .let {  }
+      .let { TODO() }
+
     is JoinLobby       ->
       getLobby(action.lobbyID)
         ?.also { lobby ->
@@ -80,5 +85,5 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
       ?.let { LobbyUpdated(it) to it.players.keys }
       ?: (ErrorEvent("missing access") to setOf(id))
 
-    is CloseLobby      -> TODO()
+    is CloseLobby      -> TODO("Close lobby")
   }

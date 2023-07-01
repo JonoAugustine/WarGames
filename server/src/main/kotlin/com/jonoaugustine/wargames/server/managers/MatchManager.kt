@@ -55,10 +55,10 @@ fun Match.addEntity(entity: Entity): Match? =
 // TODO create match should start match job
 suspend fun Connection.handleMatchAction(action: MatchAction): ActionResponse =
   when (action) {
-    is CreateMatch     -> getLobbyOf(user)
+    is CreateMatch -> getLobbyOf(user)
       ?.let { newMatch(it) }
       ?.also { it.save() }
-      ?.also { startWorld(it) }
+      ?.also { startWorldWithMatch(it) }
       ?.let { MatchCreated(it) to it.players.keys }
       ?: errorEventOf("lobby does not exist")
 

@@ -6,7 +6,8 @@ import com.jonoaugustine.wargames.common.network.missives.*
 import io.ktor.server.websocket.WebSocketServerSession
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.*
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 typealias ActionResponse = Pair<Event, Set<UserID>>
 
@@ -29,7 +30,7 @@ suspend fun WebSocketServerSession.getConnectionOrNew(
     ?.copy(session = this)
     ?.also { it.save() }
     ?.also { println("CONNECT(RENEW): ${it.id}") }
-    ?: Connection(User(UUID.randomUUID().toString(), name), this)
+    ?: Connection(User(Random.nextUInt().toString(), name), this)
       .also { mutex.withLock { connections += (it.id to it) } }
       .also { println("CONNECT(NEW): ${it.user.id}") }
 

@@ -10,13 +10,15 @@ import korlibs.korge.view.Container
 import korlibs.korge.view.position
 import korlibs.math.annotations.ViewDslMarker
 import korlibs.math.geom.Point
-import korlibs.math.geom.Size
+
+/** corner button margin */
+const val margin = 20
 
 inline fun Container.button(
   label: String,
   textSize: Float = style.value.text.medium,
   block: @ViewDslMarker UIButton.() -> Unit = {}
-): UIButton = uiButton(label, Size(textSize * label.length * 0.6f, textSize * 1.3f)) {
+): UIButton = uiButton(label, sizeFromTextSize(label, textSize)) {
   this.textSize = textSize
   background.shadowRadius = 0f
   block()
@@ -52,9 +54,9 @@ inline fun Container.cornerButton(
 ): UIButton = button(label, textSize) {
   position(
     when (corner) {
-      TOP_LEFT     -> Point(10, 10)
-      TOP_RIGHT    -> Point(this@cornerButton.width - size.width - 10, 10)
-      BOTTOM_LEFT  -> Point(10, this@cornerButton.height - size.height - 10)
+      TOP_LEFT     -> Point(margin, margin)
+      TOP_RIGHT    -> Point(this@cornerButton.width - size.width - margin, margin)
+      BOTTOM_LEFT  -> Point(margin, this@cornerButton.height - size.height - margin)
       BOTTOM_RIGHT -> Point(
         this@cornerButton.width - size.width - 10,
         this@cornerButton.height - size.height - 10

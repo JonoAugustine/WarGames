@@ -9,7 +9,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.websocket.ClientWebSocketSession
-import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.basicAuth
@@ -22,7 +21,6 @@ import io.ktor.websocket.Frame.Text
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
 import korlibs.io.async.launch
-import korlibs.korge.scene.SceneContainer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -32,26 +30,23 @@ import kotlinx.serialization.encodeToString
 import org.slf4j.LoggerFactory.getLogger
 import kotlin.time.Duration.Companion.seconds
 
-private val client = HttpClient {
-  //install()
-  install(WebSockets) {
-    contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
-    pingInterval = 1000L * 15
-  }
-  install(ContentNegotiation) { json(JsonConfig) }
-  defaultRequest {
-    host = "localhost"
-    port = 8080
-  }
-}
-
 object SocketManager {
 
   private val logger = getLogger(SocketManager::class.simpleName)
   private const val maxConnectionAttempts = 1
   private var reconnections: Int = 0
-  lateinit var sceneContainer: SceneContainer
   private var session: ClientWebSocketSession? = null
+  private val client = HttpClient {
+    install(WebSockets) {
+      contentConverter = KotlinxWebsocketSerializationConverter(JsonConfig)
+      pingInterval = 1000L * 15
+    }
+    install(ContentNegotiation) { json(JsonConfig) }
+    defaultRequest {
+      host = "localhost"
+      port = 8080
+    }
+  }
 
   val bus = EventBus()
 
@@ -61,6 +56,8 @@ object SocketManager {
       bus<Event> { logger.debug(it.toString()) }
     }
   }
+
+  suspend fun send(action: Action) = session?.send(action)
 
   suspend fun connectAs(username: String): Boolean {
     logger.info("connecting to server $reconnections")
@@ -117,7 +114,7 @@ object SocketManager {
       .also { it.exceptionOrNull()?.printStackTrace() }
       .getOrNull()
 
-  private suspend fun DefaultClientWebSocketSession.send(action: Action) =
+  private suspend fun ClientWebSocketSession.send(action: Action) =
     println("SENDING: $action")
       .also { send(JsonConfig.encodeToString<Action>(action)) }
 }

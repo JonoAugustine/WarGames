@@ -32,7 +32,6 @@ data class Hitbox(
   val offset: Vector = Vector.ZERO,
   var collisions: Map<Entity, Collision> = emptyMap()
 )
-
 fun Hitbox.polygonWith(origin: Vector, rotation: Float): Polygon =
   rectangleFrom(origin + offset, size).toRotated(rotation)
 

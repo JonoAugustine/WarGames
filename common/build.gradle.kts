@@ -18,6 +18,12 @@ kotlin {
         implementation(kotlinx("coroutines-core", Versions.coroutines))
         implementation(kotlinx("serialization-json", Versions.serialization))
         implementation("io.github.quillraven.fleks:Fleks:${Versions.fleks}")
+
+
+        //implementation("com.soywiz.korlibs.kbox2d:kbox2d:3.3.0")
+        //implementation("org.jbox2d:jbox2d-library:2.2.1.1")
+        //implementation("org.jbox2d:jbox2d-serialization:2.2.1.1")
+        //implementation("com.google.protobuf:protobuf-java:3.23.0")
       }
     }
   }

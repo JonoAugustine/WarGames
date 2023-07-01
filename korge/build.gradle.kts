@@ -36,7 +36,7 @@ korge {
   orientation = DEFAULT
 
   entryPoint = "main"
-  jvmMainClassName = "${project.group}.wargames.korge.MainKt"
+  jvmMainClassName = "${project.group}.wargames.korge.KorgeMainKt"
 
   targetJvm()
   serializationJson()
@@ -48,5 +48,6 @@ korge {
     add("commonMainApi", ktor.client("websockets"))
     add("commonMainApi", ktor.client("content-negotiation"))
     add("commonMainApi", ktor("serialization-kotlinx-json"))
+    add("commonMainApi", "io.github.quillraven.fleks:Fleks:${Versions.fleks}")
   }
 }
