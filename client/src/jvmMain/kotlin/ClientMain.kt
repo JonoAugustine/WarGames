@@ -16,7 +16,7 @@ import state.SocketContext
 import ui.screens.LobbyBrowser
 import ui.screens.LobbyScreen
 import ui.screens.MainMenu
-import ui.screens.MatchScreen
+import ui.screens.WorldScreen
 import util.dp
 
 val windowSize = Size(1000f, 600f)
@@ -50,7 +50,7 @@ fun main() = application {
             MAIN_MENU     -> MainMenu()
             LOBBY_BROWSER -> LobbyBrowser()
             LOBBY         -> LobbyScreen()
-            MATCH_PLAY    -> MatchScreen()
+            MATCH_PLAY    -> WorldScreen()
           }
         }
       }

@@ -1,5 +1,5 @@
 /***
- * Credit: https://github.com/JoelEager/Kotlin-Collision-Detector
+ * based on https://github.com/JoelEager/Kotlin-Collision-Detector
  ***/
 package com.jonoaugustine.wargames.common.math
 
@@ -49,7 +49,7 @@ fun runSAT(a: Polygon, b: Polygon): CollisionVector? {
   val axes = Array(edges.size) { index -> edges[index].orthogonal }
   var collisionVector = Vector.ZERO
 
-  // Variables to store the nearest position where polygons do not collide
+  /**  nearest position where polygons do not collide */
   var nearestPosition: Vector? = null
   var nearestDistance = Float.MAX_VALUE
 

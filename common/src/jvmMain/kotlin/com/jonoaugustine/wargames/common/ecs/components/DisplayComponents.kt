@@ -25,6 +25,9 @@ data class TransformCmpnt(var position: Vector, var rotation: Float = 0f) :
   companion object : ComponentType<TransformCmpnt>()
 }
 
+val TransformCmpnt.x get() = position.x
+val TransformCmpnt.y get() = position.y
+
 @Serializable
 data class SpriteCmpnt(val size: WgSize, val color: WgColor) :
     Component<SpriteCmpnt>, Replicated {

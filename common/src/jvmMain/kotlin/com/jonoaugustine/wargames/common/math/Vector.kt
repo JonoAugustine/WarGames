@@ -31,6 +31,8 @@ fun Vector.normalized(): Vector = Vector(
   if (y != 0f) (y / magnitude) else 0f
 )
 
+operator fun Vector.unaryMinus(): Vector = copy(x = -x, y = -y)
+
 operator fun Vector.minus(size: WgSize): Vector =
   this - Vector(size.width.toFloat(), size.height.toFloat())
 

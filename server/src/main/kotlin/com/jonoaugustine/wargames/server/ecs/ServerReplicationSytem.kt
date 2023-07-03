@@ -8,20 +8,25 @@ import com.jonoaugustine.wargames.common.network.missives.WorldUpdated
 import com.jonoaugustine.wargames.server.managers.getConnection
 import com.jonoaugustine.wargames.server.managers.getLobby
 import com.jonoaugustine.wargames.server.send
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 
 class ServerReplicationSystem : IntervalSystem() {
 
   private val lobbyID: LobbyID = inject("lobby.id")
+  private val scope: CoroutineScope = inject()
 
-  @Suppress("UNCHECKED_CAST")
-  override fun onTick() {
-    if (world.numEntities == 0) return
-    // filter replicated components
-    runBlocking {
-      getLobby(lobbyID)!!.players.keys
-        .mapNotNull { getConnection(it)?.session }
-        .forEach { it.send(WorldUpdated(world.replicationSnapshot())) }
+  override fun onTick() = runBlocking(scope.coroutineContext) {
+    if (world.numEntities == 0) return@runBlocking // !NEEDED!
+    val result = world.replicationSnapshot()
+    if (result.isFailure) {
+      TODO("handle failed snapshot")
+      return@runBlocking
     }
+    val updateEvent = WorldUpdated(result.getOrThrow())
+    getLobby(lobbyID)!!
+      .players
+      .mapNotNull { getConnection(it.key)?.session }
+      .forEach { it.send(updateEvent) }
   }
 }

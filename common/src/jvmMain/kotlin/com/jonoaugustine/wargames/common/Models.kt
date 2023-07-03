@@ -20,8 +20,8 @@ data class Lobby(
   val name: String = id,
   val players: Map<UserID, Player> = emptyMap(),
   val mapSize: WgSize = WgSize(
-    500,
-    500
+    1000,
+    1000
   )
 )
 

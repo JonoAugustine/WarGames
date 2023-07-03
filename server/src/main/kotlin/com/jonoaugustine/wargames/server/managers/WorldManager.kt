@@ -64,21 +64,27 @@ suspend fun startWorld(lobby: Lobby): World =
     .apply { mutex.withLock { worldJobs += lobby.id to launchLoop(lobby.id) } }
     // TODO remove test unit
     .apply {
-      for (i in 10 until lobby.mapSize.width step 60) {
-        addBattleUnitOf(
-          lobby.players.values.first().id,
-          Vector(i.toFloat(), i.toFloat()),
-          15f,
-          WgSize(20, 20),
-          WgColor.Red
-        )
-      }
+      addBattleUnitOf(
+        lobby.players.values.first().id,
+        Vector(200f, 200f),
+        25f,
+        WgSize(100, 75),
+        WgColor.Red
+      )
+      addBattleUnitOf(
+        lobby.players.values.first().id,
+        Vector(300f, 300f),
+        25f,
+        WgSize(100, 75),
+        WgColor.Blue
+      )
     }
 
 fun serverWorld(lobby: Lobby): World =
   configureWorld(1000) {
     injectables {
       add(worldScope)
+      add(logger)
       add("lobby.id", lobby.id)
     }
     systems {

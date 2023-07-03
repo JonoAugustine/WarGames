@@ -43,7 +43,7 @@ import util.toVector
 
 context(AppState, DefaultClientWebSocketSession)
 @Composable
-fun MatchScreen() {
+fun WorldScreen() {
   if (state.lobby == null) return goTo(MAIN_MENU)
   var sprites by remember { mutableStateOf(listOf<@Composable () -> Unit>()) }
 

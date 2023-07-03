@@ -4,16 +4,13 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.IntrinsicSize.Max
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.IntrinsicSize.Min
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -27,12 +24,16 @@ import androidx.compose.ui.unit.dp
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import com.jonoaugustine.wargames.common.ecs.GameState.PLACING
-import com.jonoaugustine.wargames.common.ecs.GameState.PLANNING
 import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.BODY
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.FRONT
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.VISION
 import com.jonoaugustine.wargames.common.ecs.components.SpriteCmpnt
 import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.colliding
 import com.jonoaugustine.wargames.common.ecs.gameState
 import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.math.plus
 import com.jonoaugustine.wargames.common.network.missives.MoveUnit
 import com.jonoaugustine.wargames.common.network.missives.SetUnitPath
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 import state.AppState
 import state.send
 import ui.components.HoverBox
+import util.color
 import util.composeColor
 import util.dp
 
@@ -52,34 +54,31 @@ context(AppState, DefaultClientWebSocketSession)
 fun World.infantrySpriteOf(entity: Entity) {
   var dragPos by remember(entity) { mutableStateOf(entity[TransformCmpnt].position) }
   var movePreview by remember { mutableStateOf(Vector.ZERO) }
-  val sprite = entity[SpriteCmpnt]
   val interactionSource = remember { MutableInteractionSource() }
 
+  val sprite = entity[SpriteCmpnt]
+  val transform = entity[TransformCmpnt]
+
   HoverBox(
-    Modifier.offset(
-      entity[TransformCmpnt].position.x.dp,
-      entity[TransformCmpnt].position.y.dp
-    )
+    Modifier.offset(transform.position.x.dp, transform.position.y.dp)
       .size(sprite.size.dp)
-      .rotate(entity[TransformCmpnt].rotation)
+      .rotate(transform.rotation)
       .background(sprite.color.composeColor)
       .border(
         1.dp,
-        if (selectedEntity == entity) Color.White
-        else if (entity[CollisionCmpnt].colliding) Color.Yellow
-        else Color.Black
+        when {
+          selectedEntity == entity                 -> Color.White
+          entity[CollisionCmpnt][FRONT].colliding  -> FRONT.color
+          entity[CollisionCmpnt][BODY].colliding   -> BODY.color
+          entity[CollisionCmpnt][VISION].colliding -> VISION.color
+          else                                     -> Color.Black
+        }
       )
       .onClick(
         matcher = PointerMatcher.mouse(PointerButton.Primary),
         interactionSource = interactionSource,
-        onClick = { selectedEntity = entity }
+        onClick = { selectedEntity = if (selectedEntity == entity) null else entity }
       )
-      .onClick(
-        matcher = PointerMatcher.mouse(PointerButton.Secondary),
-        interactionSource = interactionSource
-      ) {
-        println("Right Click")
-      }
       .pointerInput(entity, entity[TransformCmpnt], entity[SpriteCmpnt]) {
         if (world.gameState?.state == PLACING)
           detectDragGestures(
@@ -102,37 +101,28 @@ fun World.infantrySpriteOf(entity: Entity) {
             )
           }
       }
-  ) { hovering ->
-    Text(
-      "${entity.id} ${entity[TransformCmpnt].position}",
-      modifier = Modifier.offset(y = (sprite.size.height).dp).requiredWidth(Max),
-      overflow = TextOverflow.Visible,
-      fontSize = TextUnit(0.8f, TextUnitType.Em)
-    )
+  ) { _ ->
     UnitEnsign(sprite)
     if (movePreview.x + movePreview.y != 0f) UnitEnsign(sprite, movePreview)
 
-    // Show collisions
-    //entity[CollisionCmpnt].hitboxes.forEach { (key, box) ->
-    //  Box(
-    //    Modifier.offset(box.offset.x.dp, box.offset.y.dp)
-    //      .size(box.size.dp)
-    //      .border(1.dp, Color.Yellow),
-    //    content = { Text(key) }
-    //  )
-    //}
+    // show position
+    Text(
+      "${entity.id} ${entity[TransformCmpnt].position}",
+      overflow = TextOverflow.Visible,
+      fontSize = TextUnit(0.8f, TextUnitType.Em),
+      color = Color.White
+    )
+  }
 
-    // Path selector icon
-    if (world.gameState?.state == PLANNING) {
-      val pathSelectorSize = Size(10f, 10f)
-      Box(Modifier.clip(CircleShape)
-        .background(Color.Black.copy(alpha = if (hovering) 0.7f else 0f))
-        .size(pathSelectorSize.dp)
-        .pointerInput(entity) { recordPath(entity.id, entity[TransformCmpnt], sprite) }
-        // TODO path start point offset not working
-        .offset(100.dp, 100.dp)
-      )
-    }
+  // Collision box (separate to not affect the render of sprite)
+  entity[CollisionCmpnt].hitboxes.forEach { (key, hitbox) ->
+    val position = transform.position + hitbox.offset
+    Box(
+      Modifier.offset(position.x.dp, position.y.dp)
+        .requiredWidth(Min)
+        .requiredHeight(Min)
+        .border(2.dp, key.color)
+    )
   }
 }
 

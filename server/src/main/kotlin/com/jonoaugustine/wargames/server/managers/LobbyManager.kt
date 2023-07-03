@@ -48,7 +48,7 @@ fun Lobby.addPlayer(player: Player): Lobby =
 
 fun Lobby.removePlayer(playerID: String): Lobby = copy(players = players - playerID)
 
-suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
+suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse? =
   when (action) {
     CreateLobby        -> getLobbyOf(user)
       ?.let { LobbyJoined(it.players[id]!!, it) to setOf(id) }
@@ -65,7 +65,9 @@ suspend fun Connection.handleLobbyAction(action: LobbyAction): ActionResponse =
       .let { it ?: return errorEvent("missing lobby") }
       .also { /* TODO Lobby is ready check */ }
       .let { it to startWorld(it) }
-      .let { (lby, world) -> lby.responseOf(WorldUpdated(world.replicationSnapshot())) }
+      .let { it.first to it.second.replicationSnapshot() }
+      .takeIf { it.second.isSuccess }
+      ?.let { (lby, snapshot) -> lby.responseOf(WorldUpdated(snapshot.getOrThrow())) }
 
     is JoinLobby       ->
       getLobby(action.lobbyID)
