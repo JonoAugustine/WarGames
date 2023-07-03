@@ -57,7 +57,8 @@ class PathingSystem : IntervalSystem(Fixed(1f / 20)) {
         .forEach { it.cancel("path recalculated") }
 
       pending.associateTo(pathingJobs) {
-        it to scope.launch { setPath(it, (obstacles - it).values.flatten()) }
+        //it to scope.launch { setPath(it, (obstacles - it).values.flatten()) }
+        it to scope.launch { setPath(it, emptyList()) }
       }
     }
   }

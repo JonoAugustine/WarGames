@@ -4,11 +4,10 @@ import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World
 import com.github.quillraven.fleks.World.Companion.family
-import com.jonoaugustine.wargames.common.ecs.components.Collision
-import com.jonoaugustine.wargames.common.ecs.components.CollisionCmpnt
+import com.jonoaugustine.wargames.common.ecs.components.*
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.BODY
+import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.FRONT
 import com.jonoaugustine.wargames.common.ecs.components.HitboxKeys.VISION
-import com.jonoaugustine.wargames.common.ecs.components.TransformCmpnt
-import com.jonoaugustine.wargames.common.ecs.components.asPolygon
 import com.jonoaugustine.wargames.common.math.Polygon
 import com.jonoaugustine.wargames.common.math.collisionWith
 
@@ -35,6 +34,10 @@ class CollisionSystem : IteratingSystem(family { all(TransformCmpnt, CollisionCm
           .map { Collision(entityB, it.key, it.value!!) }
           .associateBy { entityB }
       }
+    }
+
+    if (collision[BODY].colliding || collision[FRONT].colliding) {
+      entity.configure { it -= PathingCmpnt }
     }
   }
 }
