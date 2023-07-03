@@ -26,10 +26,16 @@ data class Vector(val x: Float = 0f, val y: Float = 0f) {
 
 val Vector.magnitude: Float get() = sqrt(x * x + y * y)
 
+infix fun Vector.approx(other: Vector): Boolean =
+  x.toInt() == other.x.toInt() && y.toInt() == other.y.toInt()
+
 fun Vector.normalized(): Vector = Vector(
   if (x != 0f) (x / magnitude) else 0f,
   if (y != 0f) (y / magnitude) else 0f
 )
+
+fun cos(origin: Vector, adj: Vector, hyp: Vector): Float =
+  origin.distanceTo(adj) / origin.distanceTo(hyp)
 
 operator fun Vector.unaryMinus(): Vector = copy(x = -x, y = -y)
 
@@ -43,6 +49,9 @@ operator fun Vector.minus(size: WgSize): Vector =
  * @return The result of the vector subtraction.
  */
 operator fun Vector.minus(vector: Vector): Vector = this + vector * -1f
+
+operator fun Vector.plus(int: Int): Vector = copy(x = x + int, y = y + int)
+operator fun Vector.plus(float: Float): Vector = copy(x = x + float, y = y + float)
 
 operator fun Vector.plus(size: WgSize): Vector =
   this + Vector(size.width.toFloat(), size.height.toFloat())

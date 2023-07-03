@@ -6,8 +6,10 @@ import com.jonoaugustine.wargames.common.WgColor
 import com.jonoaugustine.wargames.common.WgSize
 import com.jonoaugustine.wargames.common.ecs.Replicated
 import com.jonoaugustine.wargames.common.math.Vector
+import com.jonoaugustine.wargames.common.math.distanceTo
 import com.jonoaugustine.wargames.common.math.plus
 import kotlinx.serialization.Serializable
+import kotlin.math.cos
 
 @Serializable
 data class TransformCmpnt(var position: Vector, var rotation: Float = 0f) :
@@ -46,3 +48,14 @@ fun centerOf(transform: TransformCmpnt, sprite: SpriteCmpnt): Vector =
     transform.position.y + sprite.size.height / 2
   )
 
+/**
+ * Returns X
+ * ```
+ * o----x----o
+ * |         |
+ * 0---------o
+ * ```
+ */
+fun centerOfFront(transform: TransformCmpnt, sprite: SpriteCmpnt): Vector =
+  centerOf(transform, sprite)
+    .let { it + cos(45f) * it.distanceTo(transform.position) }
